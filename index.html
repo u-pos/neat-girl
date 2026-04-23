@@ -7,51 +7,80 @@
 <style>
 body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
 
+/* シーン */
 .scene{position:relative;height:100vh;}
-
 .bg{position:absolute;width:100%;height:100%;object-fit:cover;}
 .char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
 
-/* 左上 */
+/* 左上ステータス */
 .status{
-position:absolute;top:10px;left:10px;
+position:absolute;
+top:10px;
+left:10px;
 background:rgba(0,0,0,0.6);
-padding:10px;border-radius:10px;font-size:12px;
+padding:8px;
+border-radius:8px;
+font-size:12px;
+line-height:1.4;
 }
 
-/* スタミナ */
-.bar{height:10px;background:#333;border-radius:5px;margin-top:3px;}
+/* 右上スタミナ */
+.stbox{
+position:absolute;
+top:10px;
+right:10px;
+background:rgba(0,0,0,0.6);
+padding:6px;
+border-radius:8px;
+font-size:12px;
+width:120px;
+}
+.bar{height:8px;background:#333;border-radius:4px;margin-top:3px;}
 .bar-inner{height:100%;background:#0f0;}
 
 /* メッセージ */
 .msg{
 position:absolute;
-bottom:120px;
-left:10px;right:10px;
+top:90px;
+left:10px;
+right:10px;
 background:rgba(0,0,0,0.6);
-padding:10px;
-border-radius:10px;
-min-height:50px;
+padding:8px;
+border-radius:8px;
+min-height:38px;
+font-size:13px;
 }
 
-/* ボタン */
+/* メニュー */
 .menu{
 position:absolute;
-bottom:0;
-width:100%;
-background:#111;
-padding:10px;
+bottom:10px;
+left:10px;
+right:10px;
 }
 
-.menu button{
+/* メインボタン */
+.main-btn{
 width:100%;
 padding:14px;
-margin:8px 0;
+margin:6px 0;
 font-size:16px;
-background:linear-gradient(#444,#111);
-color:#fff;
 border:none;
-border-radius:8px;
+border-radius:10px;
+background:rgba(0,0,0,0.6);
+color:#fff;
+}
+
+/* アクション用（小さめ） */
+.sub-btn{
+width:100%;
+padding:10px;
+margin:6px 0;
+font-size:14px;
+border:none;
+border-radius:12px;
+background:rgba(50,50,50,0.7);
+color:#fff;
 }
 </style>
 </head>
@@ -64,6 +93,7 @@ border-radius:8px;
 <img class="char" id="char">
 
 <div class="status" id="status"></div>
+<div class="stbox" id="stbox"></div>
 <div class="msg" id="msg"></div>
 
 <div class="menu" id="menu"></div>
@@ -86,32 +116,42 @@ maxSt:100,
 charm:10,
 trust:50,
 followers:0,
-
 msg1:"ゲーム開始",
 msg2:"",
-
 char:"normal"
 };
+render();
+}
 
+// =====================
+function save(){
+localStorage.setItem("save",JSON.stringify(state));
+}
+
+function load(){
+let s=localStorage.getItem("save");
+if(!s){alert("セーブなし");return;}
+state=JSON.parse(s);
+mode="home";
 render();
 }
 
 // =====================
 function formatMoney(n){
 if(n>=100000000){
-return Math.floor(n/100000000)+"億"+Math.floor((n%100000000)/10000)+"万";
+return Math.floor(n/100000000)+"億"+Math.floor((n%100000000)/10000)+"万円";
 }
 if(n>=10000){
-return Math.floor(n/10000)+"万";
+return Math.floor(n/10000)+"万円";
 }
-return n;
+return n+"円";
 }
 
 // =====================
 function render(){
 
 // キャラ
-const map={
+let map={
 normal:"char_normal.png",
 success:"char_success.png",
 good:"char_good.png",
@@ -120,16 +160,18 @@ fail:"char_fail.png"
 document.getElementById("char").src=map[state.char];
 document.getElementById("bg").src="bg_home.png";
 
-// ステータス
+// 左上
 document.getElementById("status").innerHTML=`
-現在 ${state.year}歳 ${state.week}週<br>
-所持金 ¥${formatMoney(state.money)}<br>
+現在 ${state.year}歳${state.week}週<br>
+所持金 ${formatMoney(state.money)}<br>
+魅力:${state.charm} 信用:${state.trust} フォロワー:${state.followers}
+`;
 
+// 右上ST
+document.getElementById("stbox").innerHTML=`
 スタミナ
 <div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>
-${state.st}/${state.maxSt}<br>
-
-魅力:${state.charm} 信用:${state.trust} フォロワー:${state.followers}
+${state.st}/${state.maxSt}
 `;
 
 // メッセージ
@@ -145,40 +187,40 @@ function renderMenu(){
 
 let m=document.getElementById("menu");
 
+// ホーム
 if(mode==="home"){
 m.innerHTML=`
-<button onclick="mode='action';render()">アクション</button>
-<button onclick="mode='shop';render()">買い物</button>
+<button class="main-btn" onclick="mode='action';render()">アクション</button>
+<button class="main-btn" onclick="mode='shop';render()">買い物</button>
 `;
 return;
 }
 
-// ===== アクション =====
+// アクション
 if(mode==="action"){
 m.innerHTML=`
-<button onclick="doStream()">配信をする（ST20）</button>
-<button onclick="doSNS()">SNS投稿（ST5）</button>
-<button onclick="doGym()">ジムへ行く（ST5 / 3000円）</button>
-<button onclick="doPapa()">パパ活に出かける（ST15）</button>
-<button onclick="mode='home';render()">戻る</button>
+<button class="sub-btn" onclick="doStream()">配信をする（ST20）</button>
+<button class="sub-btn" onclick="doSNS()">SNS投稿（ST5）</button>
+<button class="sub-btn" onclick="doGym()">ジム（ST5 / 3000円）</button>
+<button class="sub-btn" onclick="doPapa()">パパ活（ST15）</button>
+<button class="sub-btn" onclick="saveExit()">セーブして終了</button>
+<button class="sub-btn" onclick="mode='home';render()">戻る</button>
 `;
 return;
 }
 
-// ===== 買い物 =====
+// 買い物
 if(mode==="shop"){
 m.innerHTML=`
-<button onclick="buy(2000,1)">化粧品</button>
-<button onclick="buy(10000,3)">高級化粧品</button>
-<button onclick="buy(8000,3)">エステ</button>
-<button onclick="mode='home';render()">戻る</button>
+<button class="sub-btn" onclick="buy(2000,1)">化粧品</button>
+<button class="sub-btn" onclick="buy(10000,3)">高級化粧品</button>
+<button class="sub-btn" onclick="buy(8000,3)">エステ</button>
+<button class="sub-btn" onclick="mode='home';render()">戻る</button>
 `;
 }
-
 }
 
 // =====================
-// ST処理
 function useSt(n){
 if(state.st<n){
 state.msg1="スタミナ不足";
@@ -192,35 +234,31 @@ return true;
 }
 
 // =====================
-// 行動
-
 function doStream(){
 if(!useSt(20)) return;
+let m=3000+Math.random()*5000;
+let f=5+Math.floor(Math.random()*10);
 
-let money=3000+Math.random()*5000;
-let fans=5+Math.floor(Math.random()*10);
-
-state.money+=Math.floor(money);
-state.followers+=fans;
+state.money+=Math.floor(m);
+state.followers+=f;
 
 state.msg1="配信をした";
-state.msg2="¥"+Math.floor(money)+" + フォロワー+"+fans;
-
+state.msg2=`${Math.floor(m)}円 + フォロワー+${f}`;
 state.char="success";
+
 render();
 }
 
 function doSNS(){
 if(!useSt(5)) return;
+let f=3+Math.floor(Math.random()*8);
 
-let fans=3+Math.floor(Math.random()*8);
-
-state.followers+=fans;
+state.followers+=f;
 
 state.msg1="SNS投稿した";
-state.msg2="フォロワー+"+fans;
-
+state.msg2=`フォロワー+${f}`;
 state.char="good";
+
 render();
 }
 
@@ -235,48 +273,70 @@ return;
 }
 
 state.money-=3000;
-state.charm+=1;
+state.charm++;
 
 state.msg1="ジムに行った";
 state.msg2="魅力+1";
-
 state.char="good";
+
 render();
 }
 
 function doPapa(){
 if(!useSt(15)) return;
 
-let money=8000+Math.random()*8000;
-state.money+=Math.floor(money);
+let m=8000+Math.random()*8000;
+state.money+=Math.floor(m);
 
 state.msg1="パパ活成功";
-state.msg2="¥"+Math.floor(money);
-
+state.msg2=`${Math.floor(m)}円`;
 state.char="success";
+
 render();
 }
 
-// =====================
-// 買い物
-
-function buy(cost,val){
-if(state.money<cost){
-state.msg1="お金が足りない";
+function buy(c,v){
+if(state.money<c){
+state.msg1="お金不足";
 state.msg2="";
 state.char="fail";
 render();
 return;
 }
 
-state.money-=cost;
-state.charm+=val;
+state.money-=c;
+state.charm+=v;
 
 state.msg1="購入した";
-state.msg2="魅力+"+val;
-
+state.msg2=`魅力+${v}`;
 state.char="good";
+
 render();
+}
+
+// =====================
+function saveExit(){
+save();
+state.msg1="セーブしました";
+state.msg2="3秒後にホームへ戻ります";
+render();
+
+setTimeout(()=>{
+start();
+},3000);
+}
+
+// =====================
+function start(){
+let has=localStorage.getItem("save");
+
+document.getElementById("menu").innerHTML=`
+<button class="main-btn" onclick="newGame()">はじめから</button>
+<button class="main-btn" onclick="load()" ${!has?'disabled':''}>つづきから</button>
+`;
+
+document.getElementById("status").innerHTML="";
+document.getElementById("msg").innerHTML="";
 }
 
 // =====================

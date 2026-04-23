@@ -127,12 +127,19 @@ if(!state){
   console.log("state未初期化");
   return;
 }
+
+// ▼ここに入れる
+let charImg = "char_normal.png";
+if(state.charState==="success") charImg="char_success.png";
+if(state.charState==="good") charImg="char_good.png";
+if(state.charState==="fail") charImg="char_fail.png";
+
 let app = document.getElementById("app");
 
 app.innerHTML = `
 <div class="scene">
   <img class="bg" src="${BG[state.housing]}">
-  <img class="char" src="char_${state.charState}.png">
+  <img class="char" src="${charImg}">
 </div>
 
 <div class="ui">

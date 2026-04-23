@@ -17,14 +17,10 @@ body{
   max-width:480px;
   margin:auto;
 }
-
 .scene{
-  position:relative;
-  width:100%;
   height:60vh;
-  overflow:hidden;
+  min-height:300px;
 }
-
 .bg{
   width:100%;
   height:100%;
@@ -74,10 +70,10 @@ button{
 let state;
 
 const BG = {
-  home:"bg_home.jpg",
-  normal:"bg_normal.jpg",
-  luxury:"bg_luxury.jpg",
-  mansion:"bg_mansion.jpg"
+  home:"bg_home.png",
+  normal:"bg_normal.png",
+  luxury:"bg_luxury.png",
+  mansion:"bg_mansion.png"
 };
 
 function newGame(){
@@ -107,7 +103,15 @@ localStorage.setItem("save",JSON.stringify(state));
 }
 
 function load(){
-state = JSON.parse(localStorage.getItem("save"));
+try{
+  state = JSON.parse(localStorage.getItem("save"));
+  if(!state) throw "no save";
+}catch(e){
+  alert("セーブデータが壊れています");
+  localStorage.removeItem("save");
+  start();
+  return;
+}
 render();
 }
 

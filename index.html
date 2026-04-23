@@ -3,67 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>絶対に働きたくないニート女子の金稼ぎゲーム</title>
+<title>絶対に働きたくない女の金稼ぎゲーム</title>
 
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#000;
-  color:#fff;
-}
-
-.container{
-  max-width:480px;
-  margin:auto;
-}
-.scene{
-  position:relative;
-  height:60vh;
-  min-height:300px;
-}
-.bg{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
+body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
+.container{max-width:480px;margin:auto;}
+.scene{position:relative;height:60vh;min-height:300px;}
+.bg{width:100%;height:100%;object-fit:cover;}
 .char{
-  position:absolute;
-  bottom:0;
-  left:50%;
-  transform:translateX(-50%);
-  height:90%;
-  pointer-events:none;
+ position:absolute;
+ bottom:0;
+ left:50%;
+ transform:translateX(-50%);
+ height:90%;
 }
-
-.ui{
-  padding:10px;
-  background:#111;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  margin:5px 0;
-  font-size:16px;
-}
-
-.disabled{
-  opacity:0.4;
-}
-
-.box{
-  border:1px solid #444;
-  padding:6px;
-  margin-bottom:5px;
-  font-size:14px;
-}
+.ui{padding:10px;background:#111;}
+button{width:100%;padding:12px;margin:5px 0;font-size:16px;}
+.box{border:1px solid #444;padding:6px;margin-bottom:5px;font-size:14px;}
 </style>
-
 </head>
+
 <body>
-<div style="color:white">表示テスト</div>
 <div id="app" class="container"></div>
 
 <script>
@@ -71,64 +31,67 @@ button{
 let state;
 
 const BG = {
-  home:"bg_home.png",
-  normal:"bg_normal.png",
-  luxury:"bg_luxury.png",
-  mansion:"bg_mansion.png"
+home:"bg_home.png",
+normal:"bg_normal.png",
+luxury:"bg_luxury.png",
+mansion:"bg_mansion.png"
 };
 
+// =========================
+// 初期化
+// =========================
 function newGame(){
 state = {
 week:1,
 year:1,
 money:300000,
+
 st:100,
 maxSt:100,
+
 charm:10,
 trust:50,
 influence:0,
+
 housing:"home",
-gymMiss:0,
-snsUsed:false,
-gymUsed:false,
-inventory:[],
-gifts:0,
+
+// 行動回数
+streamCount:0,
+snsCount:0,
+gymCount:0,
+papaCount:0,
+
+// 彼氏
+hasBoyfriend:false,
+
 charState:"normal"
 };
+
 save();
 render();
 }
 
+// =========================
+// セーブ
+// =========================
 function save(){
 localStorage.setItem("save",JSON.stringify(state));
 }
 
 function load(){
 let s = localStorage.getItem("save");
-
-if(!s){
-  alert("セーブデータがありません");
-  return;
-}
-
-try{
-  state = JSON.parse(s);
-}catch(e){
-  alert("セーブデータ破損");
-  localStorage.removeItem("save");
-  return;
-}
-
+if(!s){alert("セーブなし");return;}
+state = JSON.parse(s);
 render();
 }
 
+// =========================
+// 描画
+// =========================
 function render(){
-if(!state){
-  console.log("state未初期化");
-  return;
-}
 
-// ▼ここに入れる
+if(!state) return;
+
 let charImg = "char_normal.png";
 if(state.charState==="success") charImg="char_success.png";
 if(state.charState==="good") charImg="char_good.png";
@@ -138,28 +101,32 @@ let app = document.getElementById("app");
 
 app.innerHTML = `
 <div class="scene">
-  <img class="bg" src="${BG[state.housing]}">
-  <img class="char" src="${charImg}">
+<img class="bg" src="${BG[state.housing]}">
+<img class="char" src="${charImg}">
 </div>
 
 <div class="ui">
 
 <div class="box">
-週：${state.year}年 ${state.week}週<br>
-所持金：¥${state.money}<br>
-ST：${state.st}/${state.maxSt}<br>
-魅力：${state.charm} 信用：${state.trust} 影響力：${state.influence}<br>
-住居：${getHouseName()}
+${state.year}年 ${state.week}週<br>
+¥${state.money}<br>
+ST ${state.st}/${state.maxSt}<br>
+魅力 ${state.charm} 信用 ${state.trust}<br>
+住居 ${getHouseName()}<br>
+彼氏 ${state.hasBoyfriend ? "あり" : "なし"}
 </div>
 
-<button onclick="actions()">行動する</button>
+<button onclick="actions()">行動</button>
+<button onclick="shopping()">買い物</button>
 <button onclick="housing()">住居変更</button>
-<button onclick="rest()">休む</button>
 
 </div>
 `;
 }
 
+// =========================
+// 住居
+// =========================
 function getHouseName(){
 return {
 home:"実家",
@@ -169,49 +136,42 @@ mansion:"豪邸"
 }[state.housing];
 }
 
-function applyHousingEffect(type){
-if(type==="normal") state.charm+=5;
-if(type==="luxury"){ state.charm+=15; }
-if(type==="mansion"){ state.charm+=30; state.maxSt+=20; }
-}
-
 function housing(){
 document.getElementById("app").innerHTML = `
-<h3>住居変更（引っ越し費用 ¥100,000）</h3>
-
+<h3>引っ越し（10万円）</h3>
 <button onclick="move('home')">実家</button>
-<button onclick="move('normal')">普通マンション</button>
-<button onclick="move('luxury')">高級マンション</button>
+<button onclick="move('normal')">普通</button>
+<button onclick="move('luxury')">高級</button>
 <button onclick="move('mansion')">豪邸</button>
-
 <button onclick="render()">戻る</button>
 `;
 }
 
 function move(type){
-
-if(state.money < 100000){
-alert("引っ越し費用が足りない");
-return;
-}
-
-state.money -= 100000;
-state.housing = type;
-applyHousingEffect(type);
-
+if(state.money<100000){alert("金不足");return;}
+state.money-=100000;
+state.housing=type;
 render();
 save();
 }
 
+// =========================
+// 行動
+// =========================
 function actions(){
 document.getElementById("app").innerHTML = `
-<button onclick="stream()">配信</button>
-<button onclick="sns()" ${state.snsUsed?'class="disabled"':''}>SNS</button>
-<button onclick="gym()" ${state.gymUsed?'class="disabled"':''}>ジム</button>
+<button onclick="stream()">配信 ${state.streamCount}/3</button>
+<button onclick="sns()">SNS ${state.snsCount}/3</button>
+<button onclick="gym()">ジム ${state.gymCount}/3</button>
+<button onclick="papa()">パパ活 ${state.papaCount}/2</button>
+<button onclick="rest()">休む</button>
 <button onclick="render()">戻る</button>
 `;
 }
 
+// =========================
+// 共通
+// =========================
 function consumeSt(n){
 if(state.st<n){
 if(!confirm("ST不足。実行？")) return false;
@@ -225,81 +185,125 @@ state.st-=n;
 return true;
 }
 
+// =========================
+// 各行動
+// =========================
+
 function stream(){
+if(state.streamCount>=3){alert("今週は不可");return;}
 if(!consumeSt(20)) return;
 
 let gain = Math.floor(state.charm*5*Math.random());
 state.money += gain;
-state.influence += 1;
+state.influence++;
 
-// ▼ここ修正
-if(gain > 0){
-  state.charState = "success";
-}else{
-  state.charState = "good";
-}
-
+state.streamCount++;
+state.charState = gain>0 ? "success":"good";
 next();
 }
 
 function sns(){
-if(state.snsUsed) return;
+if(state.snsCount>=3){alert("今週は不可");return;}
 if(!consumeSt(5)) return;
 
-let gain = 100;
-state.money += gain;
+state.money += 100;
 state.influence += 2;
-state.snsUsed = true;
 
-// ▼必ずお金増えるのでsuccess
-state.charState = "success";
-
+state.snsCount++;
+state.charState="success";
 next();
 }
 
 function gym(){
-if(state.gymUsed) return;
-if(state.money < 3000){alert("金不足"); return;}
+if(state.gymCount>=3){alert("今週は不可");return;}
+if(state.money<3000){alert("金不足");return;}
 if(!consumeSt(5)) return;
 
-state.money -= 3000;
-state.charm += 1;
-state.gymUsed = true;
-state.gymMiss = 0;
+state.money-=3000;
+state.charm+=1;
 
-if(Math.random()<0.1 && state.maxSt<150){
-  state.maxSt++;
+state.gymCount++;
+state.charState="good";
+next();
 }
 
-// ▼非金銭成功
-state.charState = "good";
+function papa(){
+if(state.papaCount>=2){alert("今週は不可");return;}
+if(!consumeSt(15)) return;
 
+let success = Math.random()<0.85;
+let caught = Math.random()<0.15;
+
+if(success){
+let gain = 5000 + Math.random()*10000;
+state.money += Math.floor(gain);
+state.charState="success";
+}else{
+state.charState="fail";
+}
+
+if(caught){
+state.trust -= 10;
+}
+
+state.papaCount++;
 next();
 }
 
 function rest(){
-state.st = Math.min(state.maxSt, state.st + 40);
+let heal = 40;
 
-// ▼非金銭成功
-state.charState = "good";
+if(state.hasBoyfriend){
+heal += 10;
+}
 
+state.st = Math.min(state.maxSt, state.st+heal);
+state.charState="good";
 next();
 }
 
+// =========================
+// 買い物（簡易）
+// =========================
+function shopping(){
+document.getElementById("app").innerHTML = `
+<button onclick="buyCharm(2000,1)">化粧品</button>
+<button onclick="buyCharm(10000,3)">高級化粧品</button>
+<button onclick="buyCharm(5000,2)">ネイル</button>
+<button onclick="buyCharm(8000,3)">エステ</button>
+<button onclick="render()">戻る</button>
+`;
+}
+
+function buyCharm(cost, val){
+if(state.money<cost){alert("金不足");return;}
+state.money-=cost;
+state.charm+=val;
+state.charState="good";
+next();
+}
+
+// =========================
+// ターン進行
+// =========================
 function next(){
 
 state.week++;
+
 if(state.week>4){
 state.week=1;
 state.year++;
+
+// ▼彼氏効果
+if(state.hasBoyfriend){
+state.charm += 2;
 }
 
-state.snsUsed=false;
-state.gymUsed=false;
-
-if(!state.gymUsed) state.gymMiss++;
-if(state.gymMiss>=4 && state.maxSt>100){
-state.maxSt--;
+// 回数リセット
+state.streamCount=0;
+state.snsCount=0;
+state.gymCount=0;
+state.papaCount=0;
 }
 
 if(state.trust<=-100){
@@ -318,19 +322,21 @@ save();
 render();
 }
 
+// =========================
+// タイトル
+// =========================
 function start(){
 let has = localStorage.getItem("save");
 
 document.getElementById("app").innerHTML = `
 <h2>絶対に働きたくない女の金稼ぎゲーム</h2>
 <button onclick="newGame()">はじめから</button>
-<button onclick="load()" ${!has?'class="disabled"':''}>つづきから</button>
+<button onclick="load()" ${!has?'disabled':''}>つづきから</button>
 `;
 }
 
 start();
 
 </script>
-
 </body>
 </html>

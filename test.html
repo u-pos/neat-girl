@@ -10,75 +10,21 @@ body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
 .bg{position:absolute;width:100%;height:100%;object-fit:cover;}
 .char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
 
-/* 左上 */
-.status{
-position:absolute;
-top:10px;
-left:10px;
-background:rgba(0,0,0,0.6);
-padding:8px;
-border-radius:8px;
-font-size:12px;
-}
-
-/* ST */
-.stbox{
-position:absolute;
-top:10px;
-right:10px;
-background:rgba(0,0,0,0.6);
-padding:6px;
-border-radius:8px;
-font-size:12px;
-width:120px;
-}
+.status{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.6);padding:8px;border-radius:8px;font-size:12px;}
+.stbox{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:6px;border-radius:8px;font-size:12px;width:120px;}
 .bar{height:8px;background:#333;border-radius:4px;margin-top:3px;}
 .bar-inner{height:100%;background:#0f0;}
 
-/* メッセージ */
-.msg{
-position:absolute;
-top:90px;
-left:10px;
-right:10px;
-background:rgba(0,0,0,0.6);
-padding:8px;
-border-radius:8px;
-min-height:40px;
-}
+.msg{position:absolute;top:90px;left:10px;right:10px;background:rgba(0,0,0,0.6);padding:8px;border-radius:8px;min-height:40px;}
 
-/* ボタン */
-.menu{
-position:absolute;
-bottom:20px;
-left:10px;
-right:10px;
-}
+.menu{position:absolute;bottom:20px;left:10px;right:10px;}
 
-.main-btn{
-width:100%;
-padding:14px;
-margin:6px 0;
-border-radius:10px;
-background:rgba(0,0,0,0.6);
-color:#fff;
-border:none;
-}
-
-.sub-btn{
-width:100%;
-padding:10px;
-margin:6px 0;
-border-radius:12px;
-background:rgba(50,50,50,0.7);
-color:#fff;
-border:none;
-}
+.main-btn{width:100%;padding:14px;margin:6px 0;border-radius:10px;background:rgba(0,0,0,0.6);color:#fff;border:none;}
+.sub-btn{width:100%;padding:10px;margin:6px 0;border-radius:12px;background:rgba(50,50,50,0.7);color:#fff;border:none;}
 </style>
 </head>
 
 <body>
-
 <div class="scene">
 <img class="bg" src="bg_home.png">
 <img class="char" id="char">
@@ -91,125 +37,126 @@ border:none;
 
 <script>
 
-let state;
-let mode="home";
+// ===== 音 =====
+function playRandom(arr){
+let a=new Audio(arr[Math.floor(Math.random()*arr.length)]);
+a.play();
+}
+function play(name){ new Audio(name).play(); }
 
-// =====================
+// ===== state =====
+let state,mode="home";
+
+// ===== 初期化 =====
 function newGame(){
 state={
-year:20,
-week:1,
-money:300000,
+day:1,
+money:100000,
 st:100,
 maxSt:100,
 
 trust:0,
 followers:0,
 
+boyfriend:"none",
+
 // 魅力構成
 gym:0,
 gymMiss:0,
-cosme:0,
-esthe:0,
-bag:0,
-cloth:0,
+cosme:0,cosmeDay:0,
+esthe:0,estheDay:0,
+bag:0,bagDay:0,
+cloth:0,clothDay:0,
 
-// 耐久
-cosmeDur:0,
-estheDur:0,
-bagDur:0,
-clothDur:0,
-
-msg1:"ゲーム開始",
+msg1:"おはよう！今日は何をする？",
 msg2:"",
 char:"normal"
 };
-
 render();
 }
 
-// =====================
+// ===== 魅力 =====
 function getCharm(){
-
 let h=0;
-if(state.housing==="normal") h=5;
-if(state.housing==="luxury") h=10;
-if(state.housing==="mansion") h=15;
+let c =
+h + state.gym +
+(state.cosme?10:0) +
+(state.esthe*10) +
+(state.bag*5) +
+(state.cloth*5);
 
-let charm=
-h
-+state.gym
-+(state.cosme?10:0)
-+(state.esthe*10)
-+(state.bag*5)
-+(state.cloth*5);
-
-return Math.min(100,charm);
+return Math.min(100,c);
 }
 
-// =====================
+// ===== 表示 =====
 function render(){
 
+// キャラ
 document.getElementById("char").src="char_"+state.char+".png";
 
-document.getElementById("status").innerHTML=`
-${state.year}歳 ${state.week}週<br>
-所持金 ${Math.floor(state.money/10000)}万円<br>
-魅力:${getCharm()} 信用:${state.trust} フォロワー:${state.followers}
-`;
+// 音
+if(state.char==="normal") playRandom(["normal1.mp3","normal2.mp3","normal3.mp3","normal4.mp3"]);
+if(state.char==="good") playRandom(["good1.mp3","good2.mp3","good3.mp3"]);
+if(state.char==="success") playRandom(["success1.mp3","success2.mp3","success3.mp3","success4.mp3"]);
 
-document.getElementById("stbox").innerHTML=`
-ST
-<div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>
-${state.st}/${state.maxSt}
-`;
+// ステータス
+document.getElementById("status").innerHTML=
+`${state.day}日目<br>所持金 ${Math.floor(state.money/10000)}万円<br>
+魅力:${getCharm()} 信用:${state.trust} フォロワー:${state.followers}`;
 
-document.getElementById("msg").innerHTML=
-state.msg1+"<br>"+state.msg2;
+// ST
+document.getElementById("stbox").innerHTML=
+`ST<div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>${state.st}/${state.maxSt}`;
+
+// メッセージ
+play("msg.mp3");
+document.getElementById("msg").innerHTML=state.msg1+"<br>"+state.msg2;
 
 renderMenu();
 }
 
-// =====================
+// ===== メニュー =====
 function renderMenu(){
-
 let m=document.getElementById("menu");
 
 if(mode==="home"){
 m.innerHTML=`
-<button class="main-btn" onclick="mode='action';render()">アクション</button>
-<button class="main-btn" onclick="mode='shop';render()">買い物</button>
+<button class="main-btn" onclick="tap();mode='action';render()">アクション</button>
+<button class="main-btn" onclick="tap();mode='shop';render()">買い物</button>
 `;
 return;
 }
 
 if(mode==="action"){
 m.innerHTML=`
-<button class="sub-btn" onclick="stream()">配信</button>
-<button class="sub-btn" onclick="sns()">SNS</button>
-<button class="sub-btn" onclick="gym()">ジム</button>
-<button class="sub-btn" onclick="papa()">パパ活</button>
-<button class="sub-btn" onclick="esthe()">エステ</button>
-<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+<button class="sub-btn" onclick="doSNS()">SNS（10ST）</button>
+<button class="sub-btn" onclick="doGym()">ジム（20ST/3000円）</button>
+<button class="sub-btn" onclick="doEsthe()">エステ（30ST/5000円）</button>
+<button class="sub-btn" onclick="doStream()">配信（50ST）</button>
+<button class="sub-btn" onclick="doPapa()">パパ活（100ST）</button>
+<button class="sub-btn" onclick="sleep()">就寝（+80）</button>
+<button class="sub-btn" onclick="tap();mode='home';render()">戻る</button>
 `;
 return;
 }
 
 if(mode==="shop"){
 m.innerHTML=`
-<button class="sub-btn" onclick="buyCosme()">高級化粧品</button>
-<button class="sub-btn" onclick="buyBag()">ブランドバッグ</button>
-<button class="sub-btn" onclick="buyCloth()">おしゃれな服</button>
-<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+<button class="sub-btn" onclick="buyCosme()">化粧品（1万円）</button>
+<button class="sub-btn" onclick="buyBag()">バッグ</button>
+<button class="sub-btn" onclick="buyCloth()">服</button>
+<button class="sub-btn" onclick="tap();mode='home';render()">戻る</button>
 `;
 }
 }
 
-// =====================
+// ===== 共通 =====
+function tap(){ play("tap0.mp3"); }
+
 function useSt(n){
 if(state.st<n){
-state.msg1="スタミナ不足";
-state.msg2="";
+state.msg1="スタミナが足りない！";
+state.msg2="今日はもう寝よう";
 state.char="fail";
 render();
 return false;
@@ -218,46 +165,66 @@ state.st-=n;
 return true;
 }
 
-// =====================
-function stream(){
-if(!useSt(20))return;
+// ===== 行動 =====
+function doSNS(){
+tap();
+if(!useSt(10))return;
+let f=5+Math.floor(Math.random()*10);
+state.followers+=f;
 
-let m=5000+Math.random()*5000;
-state.money+=m;
-state.followers+=5;
-
-state.msg1="配信をした！";
-state.msg2=`スパチャ${Math.floor(m)}円 フォロワー+5`;
-state.char="success";
-render();
-}
-
-function sns(){
-if(!useSt(5))return;
-
-state.followers+=3;
-
-state.msg1="SNS投稿した！";
-state.msg2="フォロワーが増えた！";
+state.msg1="SNSを投稿した！";
+state.msg2=`フォロワー+${f}`;
 state.char="good";
 render();
 }
 
-function gym(){
-if(!useSt(5))return;
+function doGym(){
+tap();
+if(!useSt(20))return;
+if(state.money<3000){failMoney();return;}
+state.money-=3000;
 
 if(state.gym<15) state.gym++;
-
 state.gymMiss=0;
 
-state.msg1="ジムで鍛えた！";
+state.msg1="ジムに行った！";
 state.msg2="魅力が上がった！";
 state.char="good";
 render();
 }
 
-function papa(){
-if(!useSt(15))return;
+function doEsthe(){
+tap();
+if(!useSt(30))return;
+if(state.money<5000){failMoney();return;}
+state.money-=5000;
+
+if(state.esthe<2) state.esthe++;
+
+state.msg1="エステに行った！";
+state.msg2="魅力アップ！";
+state.char="good";
+render();
+}
+
+function doStream(){
+tap();
+if(!useSt(50))return;
+let m=5000+Math.random()*5000;
+let f=10+Math.floor(Math.random()*20);
+
+state.money+=m;
+state.followers+=f;
+
+state.msg1="配信した！";
+state.msg2=`${Math.floor(m)}円 + フォロワー+${f}`;
+state.char="success";
+render();
+}
+
+function doPapa(){
+tap();
+if(!useSt(100))return;
 
 let m=10000+Math.random()*10000;
 state.money+=m;
@@ -268,78 +235,92 @@ state.char="success";
 render();
 }
 
-function esthe(){
-if(!useSt(10))return;
+function sleep(){
+tap();
 
-if(state.esthe<2){
-state.esthe++;
-state.estheDur=96;
-}
+state.st=Math.min(state.maxSt,state.st+80);
+state.day++;
 
-state.msg1="エステを利用した！";
-state.msg2="魅力アップ！";
-state.char="good";
+decay();
+boyfriendEvent();
+
+state.msg1="おはよう！今日は何をする？";
+state.msg2="";
+state.char="normal";
+
 render();
 }
 
-// =====================
-function buyCosme(){
-if(state.cosme>=1){state.msg1="これ以上持てない";render();return;}
-state.cosme=1;
-state.cosmeDur=12;
+// ===== 劣化 =====
+function decay(){
 
-state.msg1="高級化粧品を購入した！";
-state.msg2="魅力が上がった！";
+if(state.cosmeDay>0 && --state.cosmeDay===0){
+state.cosme=0;
+state.msg1="化粧品がなくなった...";
+}
+
+state.gymMiss++;
+if(state.gymMiss>=28 && state.gym>0){
+state.gym--;
+state.msg1="ジムをサボって魅力減少...";
+}
+}
+
+// ===== 彼氏 =====
+function boyfriendEvent(){
+
+let c=getCharm();
+
+if(Math.random()>0.1)return;
+
+let type="none";
+if(c>=20&&c<40) type="normal";
+if(c>=40&&c<70) type="rich";
+if(c>=70) type="vip";
+
+if(type==="none") return;
+
+if(confirm("彼氏候補が現れた！付き合う？")){
+state.boyfriend=type;
+}
+}
+
+// ===== 買い物 =====
+function buyCosme(){
+tap();
+if(state.cosme) return;
+state.cosme=1;
+state.cosmeDay=14;
+state.msg1="化粧品を購入した！";
+state.msg2="魅力アップ！";
 render();
 }
 
 function buyBag(){
-if(state.bag>=3){state.msg1="これ以上持てない";render();return;}
+tap();
+if(state.bag>=3)return;
 state.bag++;
-state.bagDur=48;
-
-state.msg1="ブランドバッグ購入！";
+state.msg1="バッグ購入！";
 state.msg2="魅力アップ！";
 render();
 }
 
 function buyCloth(){
-if(state.cloth>=5){state.msg1="これ以上持てない";render();return;}
+tap();
+if(state.cloth>=5)return;
 state.cloth++;
-state.clothDur=48;
-
-state.msg1="おしゃれな服購入！";
+state.msg1="服購入！";
 state.msg2="魅力アップ！";
 render();
 }
 
-// =====================
-setInterval(()=>{
-state.week++;
-
-if(state.week>4){
-state.week=1;
-state.year++;
-}
-
-// 劣化
-if(state.cosmeDur>0){state.cosmeDur--; if(state.cosmeDur===0){state.cosme=0; state.msg1="高級化粧品がなくなった";}}
-if(state.estheDur>0){state.estheDur--; if(state.estheDur===0){state.esthe--; state.msg1="エステが故障";}}
-if(state.bagDur>0){state.bagDur--; if(state.bagDur===0){state.bag--; state.msg1="バッグ損傷";}}
-if(state.clothDur>0){state.clothDur--; if(state.clothDur===0){state.cloth--; state.msg1="服が損傷";}}
-
-// ジム減衰
-state.gymMiss++;
-if(state.gymMiss>=4 && state.gym>0){
-state.gym--;
-state.msg1="ジムをサボって魅力減少";
-}
-
+function failMoney(){
+state.msg1="お金が足りない";
+state.msg2="";
+state.char="fail";
 render();
+}
 
-},5000);
-
-// =====================
 newGame();
 
 </script>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
+.scene{position:relative;height:100vh;}
+.bg{position:absolute;width:100%;height:100%;object-fit:cover;}
+.char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
+
+/* 左上 */
+.status{
+position:absolute;
+top:10px;
+left:10px;
+background:rgba(0,0,0,0.6);
+padding:8px;
+border-radius:8px;
+font-size:12px;
+}
+
+/* 右上 */
+.stbox{
+position:absolute;
+top:10px;
+right:10px;
+background:rgba(0,0,0,0.6);
+padding:6px;
+border-radius:8px;
+font-size:12px;
+width:140px;
+}
+
+.bar{height:8px;background:#333;border-radius:4px;margin-top:3px;}
+.bar-inner{height:100%;background:#0f0;}
+
+/* メッセージ */
+.msg{
+position:absolute;
+top:90px;
+left:10px;
+right:10px;
+background:rgba(0,0,0,0.6);
+padding:8px;
+border-radius:8px;
+min-height:40px;
+}
+
+/* ボタン */
+.menu{
+position:absolute;
+bottom:35px;
+left:10px;
+right:10px;
+}
+
+.main-btn{
+width:100%;
+padding:14px;
+margin:6px 0;
+border-radius:10px;
+background:rgba(0,0,0,0.6);
+color:#fff;
+border:none;
+}
+
+.sub-btn{
+width:100%;
+padding:10px;
+margin:4px 0;
+border-radius:12px;
+background:rgba(50,50,50,0.7);
+color:#fff;
+border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+<img class="bg" src="bg_home.png">
+<img class="char" id="char">
+
+<div class="status" id="status"></div>
+<div class="stbox" id="stbox"></div>
+<div class="msg" id="msg"></div>
+<div class="menu" id="menu"></div>
+</div>
+
+<script>
+
+// ===== 音 =====
+function playRandom(arr){
+new Audio(arr[Math.floor(Math.random()*arr.length)]).play();
+}
+function play(name){ new Audio(name).play(); }
+
+function playVoice(type){
+
+if(type==="normal"){
+if(Math.random()>0.2) return;
+playRandom(["normal1.mp3","normal2.mp3","normal3.mp3","normal4.mp3"]);
+return;
+}
+if(type==="good") playRandom(["good1.mp3","good2.mp3","good3.mp3"]);
+if(type==="success") playRandom(["success1.mp3","success2.mp3","success3.mp3","success4.mp3"]);
+if(type==="fail") playRandom(["fail1.mp3","fail2.mp3"]);
+}
+
+// ===== state =====
+let state,mode="home";
+
+function newGame(){
+state={
+day:1,
+money:100000,
+st:100,
+maxSt:100,
+
+trust:0,
+followers:0,
+
+boyfriend:"none",
+
+gym:0,gymMiss:0,
+cosme:0,cosmeDay:0,
+esthe:0,estheDay:0,
+cloth:0,clothDay:0,
+acc:0,accDay:0,
+bag:0,bagDay:0,
+
+msg1:"おはよう！今日は何をする？",
+msg2:"",
+char:"normal"
+};
+render();
+}
+
+// ===== 魅力 =====
+function getCharm(){
+let c=
+state.gym +
+(state.cosme*10)+
+(state.esthe*10)+
+(state.cloth*10)+
+(state.acc*10)+
+(state.bag*10);
+
+return Math.min(100,c);
+}
+
+// ===== 表示 =====
+function render(){
+
+document.getElementById("char").src="char_"+state.char+".png";
+playVoice(state.char);
+
+document.getElementById("status").innerHTML=
+`20歳${state.day}日目（実家）`;
+
+document.getElementById("stbox").innerHTML=
+`ST ${state.st}/${state.maxSt}
+<div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>
+彼氏:${getBoyName()} / 太客0人`;
+
+document.getElementById("msg").innerHTML=
+state.msg1+"<br>"+state.msg2;
+
+renderMenu();
+}
+
+function getBoyName(){
+return{
+none:"なし",
+normal:"通常",
+rich:"小金持ち",
+vip:"大金持ち"
+}[state.boyfriend];
+}
+
+// ===== メニュー =====
+function renderMenu(){
+let m=document.getElementById("menu");
+
+if(mode==="home"){
+m.innerHTML=`
+<button class="main-btn" onclick="tap();mode='action';render()">アクション</button>
+<button class="main-btn" onclick="tap();mode='shop';render()">買い物（所持品）</button>
+`;
+return;
+}
+
+if(mode==="action"){
+m.innerHTML=`
+<button class="sub-btn" onclick="doSNS()">SNSを投稿する（ST10消費）</button>
+<button class="sub-btn" onclick="doGym()">ジムへ行く（ST20消費）</button>
+<button class="sub-btn" onclick="doEsthe()">エステに行く（ST30消費&5000円）</button>
+<button class="sub-btn" onclick="doStream()">Youtubeで配信をする（ST50消費）</button>
+<button class="sub-btn" onclick="doPapa()">パパ活に出かける（ST100消費）</button>
+<button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
+<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+`;
+return;
+}
+
+if(mode==="shop"){
+m.innerHTML=`
+<button class="sub-btn" ${state.cosme?'disabled':''} onclick="buyCosme()">化粧品（${state.cosme?`残り${state.cosmeDay}日`:'1万円'}）</button>
+<button class="sub-btn" onclick="buyEsthe()">エステ機器（5万円）</button>
+<button class="sub-btn" onclick="buyCloth()">勝負服（10万円）</button>
+<button class="sub-btn" onclick="buyAcc()">アクセ（20万円）</button>
+<button class="sub-btn" onclick="buyBag()">バッグ（30万円）</button>
+<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+`;
+}
+}
+
+// ===== 共通 =====
+function tap(){ play("tap0.mp3"); }
+
+function useSt(n){
+if(state.st<n){
+state.msg1="スタミナが足りない！";
+state.msg2="今日はもう寝よう";
+state.char="fail";
+render();
+return false;
+}
+state.st-=n;
+return true;
+}
+
+// ===== 行動 =====
+function doSNS(){
+tap(); if(!useSt(10))return;
+let f=5+Math.floor(Math.random()*10);
+state.followers+=f;
+state.msg1="SNSを投稿した！";
+state.msg2=`フォロワー+${f}`;
+state.char="good";
+render();
+}
+
+function doGym(){
+tap(); if(!useSt(20))return;
+if(state.money<3000){failMoney();return;}
+state.money-=3000;
+if(state.gym<15) state.gym++;
+state.gymMiss=0;
+state.msg1="ジムに行った！";
+state.msg2="魅力アップ！";
+state.char="good";
+render();
+}
+
+function doStream(){
+tap(); if(!useSt(50))return;
+let m=5000+Math.random()*5000;
+state.money+=m;
+state.msg1="配信した！";
+state.msg2=`${Math.floor(m)}円もらった！`;
+state.char="success";
+render();
+}
+
+function doPapa(){
+tap(); if(!useSt(100))return;
+
+let r=Math.random();
+if(r<0.2){
+state.msg1="失敗...";
+state.msg2="今日はツイてない";
+state.char="fail";
+render(); return;
+}
+
+let total=10000+Math.random()*10000+getCharm()*1000;
+state.money+=total;
+
+state.msg1="パパ活成功！";
+state.msg2=`${Math.floor(total)}円`;
+state.char="success";
+render();
+}
+
+// ===== 就寝 =====
+function sleep(){
+tap();
+
+state.st=Math.min(state.maxSt,state.st+80);
+state.day++;
+
+decay();
+boyfriendEvent();
+
+state.msg1="おはよう！今日は何をする？";
+state.msg2="";
+state.char="normal";
+
+render();
+}
+
+// ===== 劣化 =====
+function decay(){
+
+if(state.cosmeDay>0 && --state.cosmeDay===0){
+state.cosme=0;
+state.msg1="化粧品がなくなった...";
+}
+
+state.gymMiss++;
+if(state.gymMiss>=28 && state.gym>0){
+state.gym--;
+state.msg1="ジムをサボって魅力減少...";
+}
+}
+
+// ===== 彼氏 =====
+function boyfriendEvent(){
+
+if(Math.random()>0.1)return;
+
+let c=getCharm();
+let type=null;
+
+if(c>=20&&c<40) type="normal";
+if(c>=40&&c<70) type="rich";
+if(c>=70) type="vip";
+
+if(!type || state.boyfriend===type) return;
+
+play("msg.mp3");
+
+let name={
+normal:"通常",
+rich:"小金持ち",
+vip:"大金持ち"
+};
+
+if(confirm(`彼氏候補（${name[type]}）が現れた！付き合う？`)){
+state.boyfriend=type;
+}
+}
+
+// ===== 買い物 =====
+function buyCosme(){ tap(); state.cosme=1; state.cosmeDay=7; render();}
+function buyEsthe(){ tap(); state.esthe++; render();}
+function buyCloth(){ tap(); state.cloth++; render();}
+function buyAcc(){ tap(); state.acc++; render();}
+function buyBag(){ tap(); state.bag++; render();}
+
+function failMoney(){
+state.msg1="お金が足りない";
+state.msg2="";
+state.char="fail";
+render();
+}
+
+newGame();
+
+</script>
+</body>
+</html>

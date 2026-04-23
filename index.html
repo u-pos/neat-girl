@@ -224,25 +224,36 @@ next();
 function sns(){
 if(state.snsUsed) return;
 if(!consumeSt(5)) return;
-state.money+=100;
-state.influence+=2;
-state.snsUsed=true;
-state.charState="success";
+
+let gain = 100;
+state.money += gain;
+state.influence += 2;
+state.snsUsed = true;
+
+// ▼必ずお金増えるのでsuccess
+state.charState = "success";
+
 next();
 }
 
 function gym(){
 if(state.gymUsed) return;
-if(state.money<3000){alert("金不足");return;}
+if(state.money < 3000){alert("金不足"); return;}
 if(!consumeSt(5)) return;
 
-state.money-=3000;
-state.charm+=1;
-state.gymUsed=true;
-state.gymMiss=0;
+state.money -= 3000;
+state.charm += 1;
+state.gymUsed = true;
+state.gymMiss = 0;
 
 if(Math.random()<0.1 && state.maxSt<150){
-state.maxSt++;
+  state.maxSt++;
+}
+
+// ▼非金銭成功
+state.charState = "good";
+
+next();
 }
 
 state.charState="normal";
@@ -250,8 +261,11 @@ next();
 }
 
 function rest(){
-state.st = Math.min(state.maxSt, state.st+40);
-state.charState="normal";
+state.st = Math.min(state.maxSt, state.st + 40);
+
+// ▼非金銭成功
+state.charState = "good";
+
 next();
 }
 

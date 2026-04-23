@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
+.scene{position:relative;height:100vh;}
+.bg{position:absolute;width:100%;height:100%;object-fit:cover;}
+.char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
+
+/* 左上 */
+.status{
+position:absolute;
+top:10px;
+left:10px;
+background:rgba(0,0,0,0.6);
+padding:8px;
+border-radius:8px;
+font-size:12px;
+}
+
+/* ST */
+.stbox{
+position:absolute;
+top:10px;
+right:10px;
+background:rgba(0,0,0,0.6);
+padding:6px;
+border-radius:8px;
+font-size:12px;
+width:120px;
+}
+.bar{height:8px;background:#333;border-radius:4px;margin-top:3px;}
+.bar-inner{height:100%;background:#0f0;}
+
+/* メッセージ */
+.msg{
+position:absolute;
+top:90px;
+left:10px;
+right:10px;
+background:rgba(0,0,0,0.6);
+padding:8px;
+border-radius:8px;
+min-height:40px;
+}
+
+/* ボタン */
+.menu{
+position:absolute;
+bottom:20px;
+left:10px;
+right:10px;
+}
+
+.main-btn{
+width:100%;
+padding:14px;
+margin:6px 0;
+border-radius:10px;
+background:rgba(0,0,0,0.6);
+color:#fff;
+border:none;
+}
+
+.sub-btn{
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:12px;
+background:rgba(50,50,50,0.7);
+color:#fff;
+border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+<img class="bg" src="bg_home.png">
+<img class="char" id="char">
+
+<div class="status" id="status"></div>
+<div class="stbox" id="stbox"></div>
+<div class="msg" id="msg"></div>
+<div class="menu" id="menu"></div>
+</div>
+
+<script>
+
+let state;
+let mode="home";
+
+// =====================
+function newGame(){
+state={
+year:20,
+week:1,
+money:300000,
+st:100,
+maxSt:100,
+
+trust:0,
+followers:0,
+
+// 魅力構成
+gym:0,
+gymMiss:0,
+cosme:0,
+esthe:0,
+bag:0,
+cloth:0,
+
+// 耐久
+cosmeDur:0,
+estheDur:0,
+bagDur:0,
+clothDur:0,
+
+msg1:"ゲーム開始",
+msg2:"",
+char:"normal"
+};
+
+render();
+}
+
+// =====================
+function getCharm(){
+
+let h=0;
+if(state.housing==="normal") h=5;
+if(state.housing==="luxury") h=10;
+if(state.housing==="mansion") h=15;
+
+let charm=
+h
++state.gym
++(state.cosme?10:0)
++(state.esthe*10)
++(state.bag*5)
++(state.cloth*5);
+
+return Math.min(100,charm);
+}
+
+// =====================
+function render(){
+
+document.getElementById("char").src="char_"+state.char+".png";
+
+document.getElementById("status").innerHTML=`
+${state.year}歳 ${state.week}週<br>
+所持金 ${Math.floor(state.money/10000)}万円<br>
+魅力:${getCharm()} 信用:${state.trust} フォロワー:${state.followers}
+`;
+
+document.getElementById("stbox").innerHTML=`
+ST
+<div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>
+${state.st}/${state.maxSt}
+`;
+
+document.getElementById("msg").innerHTML=
+state.msg1+"<br>"+state.msg2;
+
+renderMenu();
+}
+
+// =====================
+function renderMenu(){
+
+let m=document.getElementById("menu");
+
+if(mode==="home"){
+m.innerHTML=`
+<button class="main-btn" onclick="mode='action';render()">アクション</button>
+<button class="main-btn" onclick="mode='shop';render()">買い物</button>
+`;
+return;
+}
+
+if(mode==="action"){
+m.innerHTML=`
+<button class="sub-btn" onclick="stream()">配信</button>
+<button class="sub-btn" onclick="sns()">SNS</button>
+<button class="sub-btn" onclick="gym()">ジム</button>
+<button class="sub-btn" onclick="papa()">パパ活</button>
+<button class="sub-btn" onclick="esthe()">エステ</button>
+<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+`;
+return;
+}
+
+if(mode==="shop"){
+m.innerHTML=`
+<button class="sub-btn" onclick="buyCosme()">高級化粧品</button>
+<button class="sub-btn" onclick="buyBag()">ブランドバッグ</button>
+<button class="sub-btn" onclick="buyCloth()">おしゃれな服</button>
+<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+`;
+}
+}
+
+// =====================
+function useSt(n){
+if(state.st<n){
+state.msg1="スタミナ不足";
+state.msg2="";
+state.char="fail";
+render();
+return false;
+}
+state.st-=n;
+return true;
+}
+
+// =====================
+function stream(){
+if(!useSt(20))return;
+
+let m=5000+Math.random()*5000;
+state.money+=m;
+state.followers+=5;
+
+state.msg1="配信をした！";
+state.msg2=`スパチャ${Math.floor(m)}円 フォロワー+5`;
+state.char="success";
+render();
+}
+
+function sns(){
+if(!useSt(5))return;
+
+state.followers+=3;
+
+state.msg1="SNS投稿した！";
+state.msg2="フォロワーが増えた！";
+state.char="good";
+render();
+}
+
+function gym(){
+if(!useSt(5))return;
+
+if(state.gym<15) state.gym++;
+
+state.gymMiss=0;
+
+state.msg1="ジムで鍛えた！";
+state.msg2="魅力が上がった！";
+state.char="good";
+render();
+}
+
+function papa(){
+if(!useSt(15))return;
+
+let m=10000+Math.random()*10000;
+state.money+=m;
+
+state.msg1="パパ活成功！";
+state.msg2=`${Math.floor(m)}円もらった！`;
+state.char="success";
+render();
+}
+
+function esthe(){
+if(!useSt(10))return;
+
+if(state.esthe<2){
+state.esthe++;
+state.estheDur=96;
+}
+
+state.msg1="エステを利用した！";
+state.msg2="魅力アップ！";
+state.char="good";
+render();
+}
+
+// =====================
+function buyCosme(){
+if(state.cosme>=1){state.msg1="これ以上持てない";render();return;}
+state.cosme=1;
+state.cosmeDur=12;
+
+state.msg1="高級化粧品を購入した！";
+state.msg2="魅力が上がった！";
+render();
+}
+
+function buyBag(){
+if(state.bag>=3){state.msg1="これ以上持てない";render();return;}
+state.bag++;
+state.bagDur=48;
+
+state.msg1="ブランドバッグ購入！";
+state.msg2="魅力アップ！";
+render();
+}
+
+function buyCloth(){
+if(state.cloth>=5){state.msg1="これ以上持てない";render();return;}
+state.cloth++;
+state.clothDur=48;
+
+state.msg1="おしゃれな服購入！";
+state.msg2="魅力アップ！";
+render();
+}
+
+// =====================
+setInterval(()=>{
+state.week++;
+
+if(state.week>4){
+state.week=1;
+state.year++;
+}
+
+// 劣化
+if(state.cosmeDur>0){state.cosmeDur--; if(state.cosmeDur===0){state.cosme=0; state.msg1="高級化粧品がなくなった";}}
+if(state.estheDur>0){state.estheDur--; if(state.estheDur===0){state.esthe--; state.msg1="エステが故障";}}
+if(state.bagDur>0){state.bagDur--; if(state.bagDur===0){state.bag--; state.msg1="バッグ損傷";}}
+if(state.clothDur>0){state.clothDur--; if(state.clothDur===0){state.cloth--; state.msg1="服が損傷";}}
+
+// ジム減衰
+state.gymMiss++;
+if(state.gymMiss>=4 && state.gym>0){
+state.gym--;
+state.msg1="ジムをサボって魅力減少";
+}
+
+render();
+
+},5000);
+
+// =====================
+newGame();
+
+</script>
+</body>
+</html>

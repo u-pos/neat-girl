@@ -209,10 +209,21 @@ return;
 if(mode==="shop"){
 m.innerHTML=`
 <button class="sub-btn" ${state.cosme?'disabled':''} onclick="buyCosme()">化粧品（${state.cosme?`残り${state.cosmeDay}日`:'1万円'}）</button>
-<button class="sub-btn" onclick="buyEsthe()">エステ機器（5万円）</button>
-<button class="sub-btn" onclick="buyCloth()">勝負服（10万円）</button>
-<button class="sub-btn" onclick="buyAcc()">アクセ（20万円）</button>
-<button class="sub-btn" onclick="buyBag()">バッグ（30万円）</button>
+<button class="sub-btn" onclick="buyEsthe()">
+エステ機器（${state.estheDay>0?`残り${state.estheDay}日`:'5万円'}）
+</button>
+
+<button class="sub-btn" onclick="buyCloth()">
+勝負服一式（${state.clothDay>0?`残り${state.clothDay}日`:'10万円'}）
+</button>
+
+<button class="sub-btn" onclick="buyAcc()">
+高級ジュエリー（${state.accDay>0?`残り${state.accDay}日`:'20万円'}）
+</button>
+
+<button class="sub-btn" onclick="buyBag()">
+ブランドバッグ（${state.bagDay>0?`残り${state.bagDay}日`:'30万円'}）
+</button>
 <button class="sub-btn" onclick="mode='home';render()">戻る</button>
 `;
 }
@@ -224,7 +235,7 @@ function tap(){ play("tap0.mp3"); }
 function useSt(n){
 if(state.st<n){
 state.msg1="スタミナが足りない！";
-state.msg2="今日はもう寝よう";
+state.msg2="今日はもう寝よう。。。";
 state.char="fail";
 render();
 return false;
@@ -239,7 +250,7 @@ tap(); if(!useSt(10))return;
 let f=5+Math.floor(Math.random()*10);
 state.followers+=f;
 state.msg1="SNSを投稿した！";
-state.msg2=`フォロワー+${f}`;
+state.msg2=`フォロワーが$増えた！{f}`;
 state.char="good";
 render();
 }
@@ -260,8 +271,8 @@ function doStream(){
 tap(); if(!useSt(50))return;
 let m=5000+Math.random()*5000;
 state.money+=m;
-state.msg1="配信した！";
-state.msg2=`${Math.floor(m)}円もらった！`;
+state.msg1="配信活動が終わった！";
+state.msg2=`${Math.floor(m)}円のスパチャをもらった！`;
 state.char="success";
 render();
 }
@@ -281,7 +292,7 @@ let total=10000+Math.random()*10000+getCharm()*1000;
 state.money+=total;
 
 state.msg1="パパ活成功！";
-state.msg2=`${Math.floor(total)}円`;
+state.msg2=`${Math.floor(total)}円GET！`;
 state.char="success";
 render();
 }
@@ -312,9 +323,9 @@ state.msg1="化粧品がなくなった...";
 }
 
 state.gymMiss++;
-if(state.gymMiss>=28 && state.gym>0){
+if(state.gymMiss>=7 && state.gym>0){
 state.gym--;
-state.msg1="ジムをサボって魅力減少...";
+state.msg1="ジムを7日さぼったため魅力が1減少した。";
 }
 }
 
@@ -346,15 +357,53 @@ state.boyfriend=type;
 }
 
 // ===== 買い物 =====
-function buyCosme(){ tap(); state.cosme=1; state.cosmeDay=7; render();}
-function buyEsthe(){ tap(); state.esthe++; render();}
-function buyCloth(){ tap(); state.cloth++; render();}
-function buyAcc(){ tap(); state.acc++; render();}
-function buyBag(){ tap(); state.bag++; render();}
+function buyCosme(){
+tap();
+state.acc++;
+state.cosmeDay=7;
+state.msg1="化粧品を購入した！";
+state.msg2="";
+render();
+}
+function buyEsthe(){
+tap();
+state.esthe++;
+state.estheDay=35;
+state.msg1="エステ機器を購入した！";
+state.msg2="";
+render();
+}
+
+function buyCloth(){
+tap();
+state.cloth++;
+state.clothDay=70;
+state.msg1="勝負服一式を購入した！";
+state.msg2="";
+render();
+}
+
+function buyAcc(){
+tap();
+state.acc++;
+state.accDay=70;
+state.msg1="高級ジュエリーを購入した！";
+state.msg2="";
+render();
+}
+
+function buyBag(){
+tap();
+state.bag++;
+state.bagDay=70;
+state.msg1="ブランドバッグを購入した！";
+state.msg2="";
+render();
+}
 
 function failMoney(){
 state.msg1="お金が足りない";
-state.msg2="";
+state.msg2="なんとかしてお金をGETしなければ！";
 state.char="fail";
 render();
 }

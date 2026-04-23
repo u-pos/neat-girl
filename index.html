@@ -5,113 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-margin:0;
-background:#000;
-font-family:sans-serif;
-color:#fff;
-overflow:hidden;
-}
+body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
 
-/* ===== シーン ===== */
-.scene{
-position:relative;
-height:100vh;
-}
+.scene{position:relative;height:100vh;}
 
-/* 背景 */
-.bg{
-position:absolute;
-width:100%;
-height:100%;
-object-fit:cover;
-}
+.bg{position:absolute;width:100%;height:100%;object-fit:cover;}
+.char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
 
-/* キャラ */
-.char{
-position:absolute;
-bottom:0;
-left:50%;
-transform:translateX(-50%);
-height:75%;
-}
-
-/* ===== ステータス（左上） ===== */
+/* 左上 */
 .status{
-position:absolute;
-top:10px;
-left:10px;
+position:absolute;top:10px;left:10px;
 background:rgba(0,0,0,0.6);
-padding:10px;
-border-radius:10px;
-font-size:12px;
-line-height:1.4;
+padding:10px;border-radius:10px;font-size:12px;
 }
 
-/* スタミナバー */
-.bar{
-height:10px;
-background:#333;
-border-radius:5px;
-overflow:hidden;
-margin-top:3px;
-}
-.bar-inner{
-height:100%;
-background:linear-gradient(90deg,#ff5,#0f0);
-}
+/* スタミナ */
+.bar{height:10px;background:#333;border-radius:5px;margin-top:3px;}
+.bar-inner{height:100%;background:#0f0;}
 
-/* ===== メッセージ ===== */
+/* メッセージ */
 .msg{
 position:absolute;
-bottom:90px;
-left:10px;
-right:10px;
+bottom:120px;
+left:10px;right:10px;
 background:rgba(0,0,0,0.6);
 padding:10px;
 border-radius:10px;
-min-height:40px;
-font-size:13px;
+min-height:50px;
 }
 
-/* ===== ボタンエリア ===== */
+/* ボタン */
 .menu{
 position:absolute;
 bottom:0;
 width:100%;
-display:flex;
 background:#111;
+padding:10px;
 }
 
 .menu button{
-flex:1;
-padding:15px;
-border:none;
-color:#fff;
-font-size:14px;
-background:linear-gradient(#333,#111);
-}
-
-.menu button:active{
-background:#555;
-}
-
-/* アクションボタン */
-.action-panel{
-position:absolute;
-bottom:60px;
 width:100%;
-display:flex;
-flex-wrap:wrap;
-background:#111;
-}
-
-.action-panel button{
-width:50%;
-padding:12px;
-border:1px solid #222;
+padding:14px;
+margin:8px 0;
+font-size:16px;
 background:linear-gradient(#444,#111);
 color:#fff;
+border:none;
+border-radius:8px;
 }
 </style>
 </head>
@@ -124,43 +64,31 @@ color:#fff;
 <img class="char" id="char">
 
 <div class="status" id="status"></div>
-
 <div class="msg" id="msg"></div>
 
-<div class="action-panel" id="actions"></div>
-
-<div class="menu">
-<button onclick="setMenu('main')">メイン</button>
-<button onclick="setMenu('action')">行動</button>
-<button onclick="setMenu('shop')">買い物</button>
-</div>
+<div class="menu" id="menu"></div>
 
 </div>
 
 <script>
 
 let state;
+let mode="home";
 
 // =====================
 function newGame(){
 state={
-week:1,
 year:20,
+week:1,
 money:300000,
 st:100,
 maxSt:100,
 charm:10,
 trust:50,
-influence:0,
-housing:"home",
-boyfriend:"none",
-fans:0,
-msg:"ゲーム開始",
+followers:0,
 
-stream:0,
-sns:0,
-gym:0,
-papa:0,
+msg1:"ゲーム開始",
+msg2:"",
 
 char:"normal"
 };
@@ -174,7 +102,7 @@ if(n>=100000000){
 return Math.floor(n/100000000)+"億"+Math.floor((n%100000000)/10000)+"万";
 }
 if(n>=10000){
-return Math.floor(n/10000)+"万"+Math.floor((n%10000)/1000)+"千";
+return Math.floor(n/10000)+"万";
 }
 return n;
 }
@@ -183,96 +111,170 @@ return n;
 function render(){
 
 // キャラ
-let charMap={
+const map={
 normal:"char_normal.png",
 success:"char_success.png",
 good:"char_good.png",
 fail:"char_fail.png"
 };
-
-document.getElementById("char").src=charMap[state.char];
+document.getElementById("char").src=map[state.char];
 document.getElementById("bg").src="bg_home.png";
 
 // ステータス
 document.getElementById("status").innerHTML=`
-${state.year}歳 ${state.week}週<br>
-¥${formatMoney(state.money)}<br>
+現在 ${state.year}歳 ${state.week}週<br>
+所持金 ¥${formatMoney(state.money)}<br>
 
 スタミナ
 <div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>
 ${state.st}/${state.maxSt}<br>
 
-魅力:${state.charm} 信用:${state.trust} 影響力:${state.influence}<br>
-住居:実家 彼氏:${state.boyfriend} 太客:0人
+魅力:${state.charm} 信用:${state.trust} フォロワー:${state.followers}
 `;
 
 // メッセージ
-document.getElementById("msg").innerText=state.msg;
+document.getElementById("msg").innerHTML=
+state.msg1+"<br>"+state.msg2;
 
+// ボタン
+renderMenu();
 }
 
 // =====================
-function setMenu(type){
+function renderMenu(){
 
-let el=document.getElementById("actions");
+let m=document.getElementById("menu");
 
-if(type==="main"){
-el.innerHTML="";
+if(mode==="home"){
+m.innerHTML=`
+<button onclick="mode='action';render()">アクション</button>
+<button onclick="mode='shop';render()">買い物</button>
+`;
 return;
 }
 
-if(type==="action"){
-el.innerHTML=`
-<button onclick="stream()">配信</button>
-<button onclick="sns()">SNS</button>
-<button onclick="gym()">ジム</button>
-<button onclick="papa()">パパ活</button>
+// ===== アクション =====
+if(mode==="action"){
+m.innerHTML=`
+<button onclick="doStream()">配信をする（ST20）</button>
+<button onclick="doSNS()">SNS投稿（ST5）</button>
+<button onclick="doGym()">ジムへ行く（ST5 / 3000円）</button>
+<button onclick="doPapa()">パパ活に出かける（ST15）</button>
+<button onclick="mode='home';render()">戻る</button>
 `;
+return;
 }
 
-if(type==="shop"){
-el.innerHTML=`
+// ===== 買い物 =====
+if(mode==="shop"){
+m.innerHTML=`
 <button onclick="buy(2000,1)">化粧品</button>
 <button onclick="buy(10000,3)">高級化粧品</button>
 <button onclick="buy(8000,3)">エステ</button>
+<button onclick="mode='home';render()">戻る</button>
 `;
 }
 
 }
 
 // =====================
-function stream(){
-state.money+=5000;
-state.msg="配信で稼いだ";
+// ST処理
+function useSt(n){
+if(state.st<n){
+state.msg1="スタミナ不足";
+state.msg2="";
+state.char="fail";
+render();
+return false;
+}
+state.st-=n;
+return true;
+}
+
+// =====================
+// 行動
+
+function doStream(){
+if(!useSt(20)) return;
+
+let money=3000+Math.random()*5000;
+let fans=5+Math.floor(Math.random()*10);
+
+state.money+=Math.floor(money);
+state.followers+=fans;
+
+state.msg1="配信をした";
+state.msg2="¥"+Math.floor(money)+" + フォロワー+"+fans;
+
 state.char="success";
 render();
 }
 
-function sns(){
-state.influence+=2;
-state.msg="SNS更新した";
+function doSNS(){
+if(!useSt(5)) return;
+
+let fans=3+Math.floor(Math.random()*8);
+
+state.followers+=fans;
+
+state.msg1="SNS投稿した";
+state.msg2="フォロワー+"+fans;
+
 state.char="good";
 render();
 }
 
-function gym(){
+function doGym(){
+if(!useSt(5)) return;
+if(state.money<3000){
+state.msg1="お金が足りない";
+state.msg2="";
+state.char="fail";
+render();
+return;
+}
+
+state.money-=3000;
 state.charm+=1;
-state.msg="ジムで鍛えた";
+
+state.msg1="ジムに行った";
+state.msg2="魅力+1";
+
 state.char="good";
 render();
 }
 
-function papa(){
-state.money+=10000;
-state.msg="パパ活成功";
+function doPapa(){
+if(!useSt(15)) return;
+
+let money=8000+Math.random()*8000;
+state.money+=Math.floor(money);
+
+state.msg1="パパ活成功";
+state.msg2="¥"+Math.floor(money);
+
 state.char="success";
 render();
 }
 
-function buy(c,v){
-state.money-=c;
-state.charm+=v;
-state.msg="買い物した";
+// =====================
+// 買い物
+
+function buy(cost,val){
+if(state.money<cost){
+state.msg1="お金が足りない";
+state.msg2="";
+state.char="fail";
+render();
+return;
+}
+
+state.money-=cost;
+state.charm+=val;
+
+state.msg1="購入した";
+state.msg2="魅力+"+val;
+
 state.char="good";
 render();
 }
@@ -281,6 +283,5 @@ render();
 newGame();
 
 </script>
-
 </body>
 </html>

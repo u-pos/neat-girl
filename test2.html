@@ -177,7 +177,8 @@ esthe:0,estheDay:0,
 cloth:0,clothDay:0,
 acc:0,accDay:0,
 bag:0,bagDay:0,
-
+esthePoint:0,
+estheMiss:0,
 msg1: getMorningMsg(), // ←ここ変更
 msg2:"",
 char:"normal"
@@ -295,64 +296,106 @@ state.st-=n;
 return true;
 }
 
+  
+// =====お金の管理 =====
+function pay(cost){
+if(state.money < cost){
+state.msg1 = "お金が足りない...";
+state.msg2 = "どうにかして稼がないと";
+state.char = "fail";
+playVoice("fail");
+render();
+return false;
+}
+state.money -= cost;
+return true;
+}
 // ===== 行動 =====
 function doSNS(){
-tap(); if(!useSt(10))return;
+tap();
+if(!useSt(10)) return;
 
-let f=5+Math.floor(Math.random()*10);
-state.followers+=f;
+let f = 5 + Math.floor(Math.random()*10);
+state.followers += f;
 
-state.msg1="SNSを投稿した！";
-state.msg2=`フォロワーが${f}人増えた！`;
+state.msg1 = "SNSを投稿した！";
+state.msg2 = `フォロワーが${f}人増えた！`;
+state.char = "good";
 
-state.char="good";
-playVoice("good"); // ←追加
-
+playVoice("good");
 render();
 }
+function doEsthe(){
+tap();
+if(!useSt(30)) return;
+if(!pay(5000)) return;
 
-function doGym(){
-tap(); if(!useSt(20))return;
-if(state.money<3000){failMoney();return;}
-state.money-=3000;
-if(state.gym<15) state.gym++;
-state.gymMiss=0;
-state.msg1="ジムに行った！";
-state.msg2="魅力が1アップ！";
-state.char="good";
-playVoice("good"); // ←追加
+// ★ここが本体
+if(state.esthePoint < 15) state.esthePoint++;
+state.estheMiss = 0;
+
+state.msg1 = "エステサロンに行った！";
+state.msg2 = "魅力が1上がった！";
+state.char = "good";
+
+playVoice("good");
 render();
 }
 
 function doStream(){
-tap(); if(!useSt(50))return;
-let m=5000+Math.random()*5000;
-state.money+=m;
-state.msg1="配信活動が終わった！";
-state.msg2=`${Math.floor(m)}円のスパチャをもらった！`;
-state.char="success";
-playVoice("success"); // ←追加
+tap();
+if(!useSt(50)) return;
+
+let m = 5000 + Math.random()*5000;
+let f = 10 + Math.floor(Math.random()*20);
+
+state.money += Math.floor(m);
+state.followers += f;
+
+state.msg1 = "Youtubeで配信をした！";
+state.msg2 = `${Math.floor(m)}円の投げ銭！ フォロワー+${f}`;
+state.char = "success";
+
+playVoice("success");
 render();
 }
 
 function doPapa(){
-tap(); if(!useSt(100))return;
+tap();
+if(!useSt(100)) return;
 
-let r=Math.random();
-if(r<0.2){
-state.msg1="失敗...";
-state.msg2="今日はツイてない";
+let r = Math.random();
+
+if(r < 0.1){
+state.msg1="失敗。。。1円ももらえなかった。";
+state.msg2="骨折り損だわ。。。";
 state.char="fail";
-render(); return;
+playVoice("fail");
+render();
+return;
 }
 
-let total=10000+Math.random()*10000+getCharm()*1000;
-state.money+=total;
+if(r < 0.2){
+state.msg1="最悪。待ち合わせすっぽかされた。";
+state.msg2="もう今日は何もやる気でない";
+state.char="fail";
+playVoice("fail");
+render();
+return;
+}
+
+let base = 10000 + Math.random()*10000;
+let bonus = getCharm()*1000;
+
+let total = Math.floor(base + bonus);
+
+state.money += total;
 
 state.msg1="パパ活成功！";
-state.msg2=`${Math.floor(total)}円GET！`;
+state.msg2=`${total}円もらった！`;
 state.char="success";
-playVoice("success"); // ←追加
+
+playVoice("success");
 render();
 }
 
@@ -360,7 +403,7 @@ render();
 function sleep(){
 tap();
 
-state.st=Math.min(state.maxSt,state.st+80);
+state.st = Math.min(state.maxSt, state.st + 80);
 state.day++;
 
 decay();
@@ -368,9 +411,9 @@ boyfriendEvent();
 
 state.msg1 = getMorningMsg();
 state.msg2 = "";
-state.char="normal";
+state.char = "normal";
 
-playVoice("normal"); // ←ここでだけ鳴らす
+playVoice("normal");
 
 render();
 }
@@ -409,7 +452,12 @@ state.msg2="破けちゃった。使い方が悪いのかなぁ。";
 state.gymMiss++;
 if(state.gymMiss>=7 && state.gym>0){
 state.gym--;
-state.msg1="ジムを7日さぼったため魅力が1減少した。";
+state.msg1="ジムを7日連続でさぼったため魅力が1減少した。";
+}
+state.estheMiss++;
+if(state.estheMiss >= 14 && state.esthePoint > 0){
+state.esthePoint--;
+state.msg1 = "14日連続でエステに行かなかったため魅力1が下がった...";
 }
 }
 

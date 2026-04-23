@@ -157,8 +157,11 @@ function render(){
 
 document.getElementById("char").src="char_"+state.char+".png";
 
-document.getElementById("status").innerHTML=
-`20歳${state.day}日目（実家）`;
+document.getElementById("status").innerHTML=`
+20歳${state.day}日目（${getHouseName()}）<br>
+所持金 ${Math.floor(state.money)}円<br>
+魅力:${getCharm()} 信用:${state.trust} フォロワー:${state.followers}
+`;
 
 document.getElementById("stbox").innerHTML=
 `ST ${state.st}/${state.maxSt}

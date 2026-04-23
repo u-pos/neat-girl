@@ -126,11 +126,11 @@ playRandom(["fail1.mp3","fail2.mp3"]);
 let state,mode="home";
 function showTitle(){
 
-mode="title";
+let hasSave = localStorage.getItem("saveData");
 
 document.getElementById("menu").innerHTML=`
 <button class="main-btn" onclick="startNew()">はじめから</button>
-<button class="main-btn" onclick="continueGame()">つづきから</button>
+<button class="main-btn" onclick="continueGame()" ${!hasSave?'disabled':''}>つづきから</button>
 `;
 
 document.getElementById("status").innerHTML="";
@@ -140,7 +140,16 @@ document.getElementById("msg").innerHTML="";
 tap();
 newGame();
 }
+function getMorningMsg(){
 
+let list = [
+"おはよう！今日は何をする？",
+"ふぁ～よく寝た。さぁ今日はどうしよっかな～！",
+"おはよう～！今日はいい天気だねー。今日は何しよっか。"
+];
+
+return list[Math.floor(Math.random()*list.length)];
+}
 function continueGame(){
 tap();
 if(loadGame()){
@@ -169,10 +178,11 @@ cloth:0,clothDay:0,
 acc:0,accDay:0,
 bag:0,bagDay:0,
 
-msg1:"おはよう！今日は何をする？",
+msg1: getMorningMsg(), // ←ここ変更
 msg2:"",
 char:"normal"
 };
+
 render();
 }
 function getHouseName(){
@@ -356,8 +366,8 @@ state.day++;
 decay();
 boyfriendEvent();
 
-state.msg1="おはよう！今日は何をする？";
-state.msg2="";
+state.msg1 = getMorningMsg();
+state.msg2 = "";
 state.char="normal";
 
 playVoice("normal"); // ←ここでだけ鳴らす
@@ -433,49 +443,80 @@ state.boyfriend=type;
 // ===== 買い物 =====
 function buyCosme(){
 tap();
-state.cosme = 1; // ← 正しくはこれ
+if(state.cosme >= 1) return;
+if(!pay(10000)) return;
+
+state.cosme = 1;
 state.cosmeDay = 7;
+
 state.msg1="化粧品を購入した！";
-state.msg2="";
+state.msg2="魅力+10";
+state.char="good";
+playVoice("good");
+
 render();
 }
 function buyEsthe(){
 tap();
-if(state.esthe>=1) return;
-state.esthe=1;
-state.estheDay=35;
+if(state.esthe >= 1) return;
+if(!pay(50000)) return;
+
+state.esthe = 1;
+state.estheDay = 35;
+
 state.msg1="エステ機器を購入した！";
-state.msg2="";
+state.msg2="魅力+10";
+state.char="good";
+playVoice("good");
+
 render();
 }
 
 function buyCloth(){
 tap();
-if(state.cloth>=1) return;
-state.cloth=1;
-state.clothDay=70;
+if(state.cloth >= 1) return;
+if(!pay(100000)) return;
+
+state.cloth = 1;
+state.clothDay = 70;
+
 state.msg1="勝負服一式を購入した！";
-state.msg2="";
+state.msg2="魅力+10";
+state.char="good";
+playVoice("good");
+
 render();
 }
 
 function buyAcc(){
 tap();
-if(state.acc>=1) return;
-state.acc=1;
-state.accDay=70;
-state.msg1="高級ジュエリーを購入した！";
-state.msg2="";
+if(state.acc >= 1) return;
+if(!pay(200000)) return;
+
+state.acc = 1;
+state.accDay = 70;
+
+state.msg1="高級アクセサリーを購入した！";
+state.msg2="魅力+10";
+state.char="good";
+playVoice("good");
+
 render();
 }
 
 function buyBag(){
 tap();
-if(state.bag>=1) return;
-state.bag=1;
-state.bagDay=70;
+if(state.bag >= 1) return;
+if(!pay(300000)) return;
+
+state.bag = 1;
+state.bagDay = 70;
+
 state.msg1="ブランドバッグを購入した！";
-state.msg2="";
+state.msg2="魅力+10";
+state.char="good";
+playVoice("good");
+
 render();
 }
 
@@ -510,7 +551,9 @@ showTitle();
 },2500);
 }
   
-newGame();
+window.onload = function(){
+showTitle();
+};
 
 </script>
 </body>

@@ -101,13 +101,25 @@ function play(name){ new Audio(name).play(); }
 function playVoice(type){
 
 if(type==="normal"){
-if(Math.random()>0.2) return;
+if(Math.random()<0.2){
 playRandom(["normal1.mp3","normal2.mp3","normal3.mp3","normal4.mp3"]);
+}
 return;
 }
-if(type==="good") playRandom(["good1.mp3","good2.mp3","good3.mp3"]);
-if(type==="success") playRandom(["success1.mp3","success2.mp3","success3.mp3","success4.mp3"]);
-if(type==="fail") playRandom(["fail1.mp3","fail2.mp3"]);
+
+if(type==="good"){
+playRandom(["good1.mp3","good2.mp3","good3.mp3"]);
+return;
+}
+
+if(type==="success"){
+playRandom(["success1.mp3","success2.mp3","success3.mp3","success4.mp3"]);
+return;
+}
+
+if(type==="fail"){
+playRandom(["fail1.mp3","fail2.mp3"]);
+}
 }
 
 // ===== state =====
@@ -138,7 +150,9 @@ char:"normal"
 };
 render();
 }
-
+function getHouseName(){
+return "実家"; // 今は固定（後で拡張）
+}
 // ===== 魅力 =====
 function getCharm(){
 let c=
@@ -249,11 +263,16 @@ return true;
 // ===== 行動 =====
 function doSNS(){
 tap(); if(!useSt(10))return;
+
 let f=5+Math.floor(Math.random()*10);
 state.followers+=f;
+
 state.msg1="SNSを投稿した！";
 state.msg2=`フォロワーが${f}人増えた！`;
+
 state.char="good";
+playVoice("good"); // ←追加
+
 render();
 }
 
@@ -264,8 +283,9 @@ state.money-=3000;
 if(state.gym<15) state.gym++;
 state.gymMiss=0;
 state.msg1="ジムに行った！";
-state.msg2="魅力アップ！";
+state.msg2="魅力が1アップ！";
 state.char="good";
+playVoice("good"); // ←追加
 render();
 }
 
@@ -276,6 +296,7 @@ state.money+=m;
 state.msg1="配信活動が終わった！";
 state.msg2=`${Math.floor(m)}円のスパチャをもらった！`;
 state.char="success";
+playVoice("success"); // ←追加
 render();
 }
 
@@ -296,6 +317,7 @@ state.money+=total;
 state.msg1="パパ活成功！";
 state.msg2=`${Math.floor(total)}円GET！`;
 state.char="success";
+playVoice("success"); // ←追加
 render();
 }
 
@@ -312,6 +334,8 @@ boyfriendEvent();
 state.msg1="おはよう！今日は何をする？";
 state.msg2="";
 state.char="normal";
+
+playVoice("normal"); // ←ここでだけ鳴らす
 
 render();
 }

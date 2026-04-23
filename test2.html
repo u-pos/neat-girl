@@ -124,7 +124,32 @@ playRandom(["fail1.mp3","fail2.mp3"]);
 
 // ===== state =====
 let state,mode="home";
+function showTitle(){
 
+mode="title";
+
+document.getElementById("menu").innerHTML=`
+<button class="main-btn" onclick="startNew()">はじめから</button>
+<button class="main-btn" onclick="continueGame()">つづきから</button>
+`;
+
+document.getElementById("status").innerHTML="";
+document.getElementById("msg").innerHTML="";
+}
+  function startNew(){
+tap();
+newGame();
+}
+
+function continueGame(){
+tap();
+if(loadGame()){
+render();
+}else{
+alert("セーブデータがありません");
+}
+}
+  
 function newGame(){
 state={
 day:1,
@@ -460,7 +485,31 @@ state.msg2="なんとかしてお金をGETしなければ！";
 state.char="fail";
 render();
 }
+function saveGame(){
+localStorage.setItem("saveData", JSON.stringify(state));
+}
 
+function loadGame(){
+let data = localStorage.getItem("saveData");
+if(!data) return false;
+state = JSON.parse(data);
+return true;
+}
+
+function saveAndExit(){
+tap();
+saveGame();
+
+state.msg1="セーブしました";
+state.msg2="タイトルに戻ります";
+
+render();
+
+setTimeout(()=>{
+showTitle();
+},2500);
+}
+  
 newGame();
 
 </script>

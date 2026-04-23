@@ -156,7 +156,6 @@ return Math.min(100,c);
 function render(){
 
 document.getElementById("char").src="char_"+state.char+".png";
-playVoice(state.char);
 
 document.getElementById("status").innerHTML=
 `20歳${state.day}日目（実家）`;
@@ -250,7 +249,7 @@ tap(); if(!useSt(10))return;
 let f=5+Math.floor(Math.random()*10);
 state.followers+=f;
 state.msg1="SNSを投稿した！";
-state.msg2=`フォロワーが$増えた！{f}`;
+state.msg2=`フォロワーが${f}人増えた！`;
 state.char="good";
 render();
 }
@@ -320,8 +319,31 @@ function decay(){
 if(state.cosmeDay>0 && --state.cosmeDay===0){
 state.cosme=0;
 state.msg1="化粧品がなくなった...";
+state.msg2="早急に補充しなくちゃ！";
+}
+if(state.estheDay>0 && --state.estheDay===0){
+state.esthe=0;
+state.msg1="エステ機器が故障した...";
+state.msg2="壊れるの早すぎだよ～。";
 }
 
+if(state.clothDay>0 && --state.clothDay===0){
+state.cloth=0;
+state.msg1="勝負服が経年劣化した...";
+state.msg2="やばい！これじゃいざという時に困る！";
+}
+
+if(state.accDay>0 && --state.accDay===0){
+state.acc=0;
+state.msg1="高級ジュエリーを紛失した...";
+state.msg2="最悪。また買わなくちゃ！";
+}
+
+if(state.bagDay>0 && --state.bagDay===0){
+state.bag=0;
+state.msg1="ブランドバッグが経年劣化した...";
+state.msg2="破けちゃった。使い方が悪いのかなぁ。";
+}
 state.gymMiss++;
 if(state.gymMiss>=7 && state.gym>0){
 state.gym--;
@@ -359,15 +381,16 @@ state.boyfriend=type;
 // ===== 買い物 =====
 function buyCosme(){
 tap();
-state.acc++;
-state.cosmeDay=7;
+state.cosme = 1; // ← 正しくはこれ
+state.cosmeDay = 7;
 state.msg1="化粧品を購入した！";
 state.msg2="";
 render();
 }
 function buyEsthe(){
 tap();
-state.esthe++;
+if(state.esthe>=1) return;
+state.esthe=1;
 state.estheDay=35;
 state.msg1="エステ機器を購入した！";
 state.msg2="";
@@ -376,7 +399,8 @@ render();
 
 function buyCloth(){
 tap();
-state.cloth++;
+if(state.cloth>=1) return;
+state.cloth=1;
 state.clothDay=70;
 state.msg1="勝負服一式を購入した！";
 state.msg2="";
@@ -385,7 +409,8 @@ render();
 
 function buyAcc(){
 tap();
-state.acc++;
+if(state.acc>=1) return;
+state.acc=1;
 state.accDay=70;
 state.msg1="高級ジュエリーを購入した！";
 state.msg2="";
@@ -394,7 +419,8 @@ render();
 
 function buyBag(){
 tap();
-state.bag++;
+if(state.bag>=1) return;
+state.bag=1;
 state.bagDay=70;
 state.msg1="ブランドバッグを購入した！";
 state.msg2="";

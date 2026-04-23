@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>絶対に働きたくない女の金稼ぎゲーム</title>
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:#111;
+  color:#fff;
+}
+.container {
+  max-width:500px;
+  margin:auto;
+  padding:10px;
+}
+button {
+  width:100%;
+  padding:12px;
+  margin:5px 0;
+  font-size:16px;
+}
+.disabled {
+  opacity:0.4;
+}
+.box {
+  border:1px solid #444;
+  padding:8px;
+  margin:5px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="app"></div>
+
+<script>
+
+let state;
+
+function newGame(){
+state = {
+week:1,
+year:1,
+money:300000,
+st:100,
+maxSt:100,
+charm:10,
+trust:50,
+influence:0,
+gymMiss:0,
+snsUsed:false,
+gymUsed:false,
+inventory:[],
+gifts:0
+};
+save();
+render();
+}
+
+function save(){
+localStorage.setItem("save", JSON.stringify(state));
+}
+
+function load(){
+let s = localStorage.getItem("save");
+if(s){
+state = JSON.parse(s);
+render();
+}
+}
+
+function render(){
+
+let app = document.getElementById("app");
+
+app.innerHTML = `
+<h2>絶対に働きたくない女の金稼ぎゲーム</h2>
+
+<div class="box">
+週：${state.year}年 ${state.week}週<br>
+所持金：¥${state.money}<br>
+ST：${state.st}/${state.maxSt}<br>
+魅力：${state.charm} 信用：${state.trust} 影響力：${state.influence}<br>
+ジム：${state.gymMiss<4 ? "あと"+(4-state.gymMiss)+"週" : "低下中"}
+</div>
+
+<button onclick="actions()">行動する</button>
+<button onclick="beauty()">美容・持ち物</button>
+<button onclick="rest()">休む</button>
+`;
+}
+
+function actions(){
+let html = `
+<button onclick="doStream()">配信（ST-20）</button>
+<button onclick="doPapa()">パパ活（ST-30）</button>
+<button onclick="doSNS()" ${state.snsUsed?'class="disabled"':''}>SNS（ST-5）</button>
+<button onclick="doGym()" ${state.gymUsed?'class="disabled"':''}>ジム（ST-5/3000円）</button>
+<button onclick="sellGift()" ${state.gifts<=0?'class="disabled"':''}>ギフト転売</button>
+<button onclick="render()">戻る</button>
+`;
+document.getElementById("app").innerHTML = html;
+}
+
+function consumeSt(cost){
+if(state.st < cost){
+if(!confirm("ST不足。失敗する可能性があります。実行しますか？")) return false;
+if(Math.random() < 0.5){
+alert("失敗した");
+state.trust -= 3;
+state.st -= 5;
+next();
+return false;
+}
+}
+state.st -= cost;
+return true;
+}
+
+function doStream(){
+if(!consumeSt(20)) return;
+let gain = Math.floor((state.influence*0.8 + state.charm*0.5)*(0.8+Math.random()*0.7));
+state.money += gain;
+state.influence += 1;
+alert("配信収入 ¥"+gain);
+next();
+}
+
+let papaCount=0;
+
+function doPapa(){
+if(!consumeSt(30)) return;
+papaCount++;
+let risk = [0.15,0.25,0.35,0.4][Math.min(papaCount-1,3)];
+let gain = Math.floor(state.charm*3*(1+Math.random()));
+state.money += gain;
+if(Math.random() < risk){
+state.trust -= 10;
+alert("バレた！信用低下");
+}
+alert("¥"+gain+"稼いだ");
+next();
+}
+
+function doSNS(){
+if(state.snsUsed) return;
+if(!consumeSt(5)) return;
+state.money += 50+Math.floor(Math.random()*100);
+state.influence += 2;
+if(Math.random()<0.3) state.gifts++;
+state.snsUsed = true;
+next();
+}
+
+function doGym(){
+if(state.gymUsed) return;
+if(state.money < 3000){alert("金不足"); return;}
+if(!consumeSt(5)) return;
+
+state.money -= 3000;
+state.charm += 1;
+state.gymUsed = true;
+state.gymMiss = 0;
+
+if(Math.random()<0.1 && state.maxSt<150){
+state.maxSt++;
+alert("最大STアップ！");
+}
+
+next();
+}
+
+function sellGift(){
+if(state.gifts<=0) return;
+let gain = 100+Math.floor(Math.random()*200);
+state.money += gain;
+state.gifts--;
+if(Math.random()<0.2){
+state.trust -= 5;
+alert("転売がバレた！");
+}
+next();
+}
+
+function beauty(){
+let html = `
+<button onclick="buy('cosme')">化粧品 ¥5000</button>
+<button onclick="buy('lux')">高級化粧品 ¥20000</button>
+<button onclick="buy('esthe')">エステ ¥15000</button>
+<button onclick="render()">戻る</button>
+`;
+document.getElementById("app").innerHTML = html;
+}
+
+function buy(type){
+let item;
+if(type=="cosme") item={cost:5000, charm:1, dur:2};
+if(type=="lux") item={cost:20000, charm:4, dur:3};
+if(type=="esthe") item={cost:15000, charm:3, dur:2};
+
+if(state.money < item.cost){alert("金不足"); return;}
+
+state.money -= item.cost;
+state.charm += item.charm;
+state.inventory.push(item);
+next();
+}
+
+function rest(){
+state.st = Math.min(state.maxSt, state.st + 40);
+state.charm += 1;
+next();
+}
+
+function next(){
+state.week++;
+if(state.week>4){
+state.week=1;
+state.year++;
+}
+
+state.snsUsed=false;
+state.gymUsed=false;
+
+state.inventory.forEach(i=>{
+i.dur--;
+if(i.dur<=0){
+state.charm -= i.charm;
+}
+});
+state.inventory = state.inventory.filter(i=>i.dur>0);
+
+//ジム未実行カウント
+if(!state.gymUsed) state.gymMiss++;
+
+if(state.gymMiss>=4 && state.maxSt>100){
+state.maxSt--;
+}
+
+if(state.trust <= -100){
+alert("信用崩壊 GAME OVER");
+localStorage.removeItem("save");
+location.reload();
+}
+
+if(state.money < -1000000){
+alert("借金破産 GAME OVER");
+localStorage.removeItem("save");
+location.reload();
+}
+
+save();
+render();
+}
+
+function startScreen(){
+let saveExists = localStorage.getItem("save");
+
+document.getElementById("app").innerHTML = `
+<h2>絶対に働きたくない女の金稼ぎゲーム</h2>
+<button onclick="newGame()">はじめから</button>
+<button onclick="load()" ${!saveExists?'class="disabled"':''}>つづきから</button>
+`;
+}
+
+startScreen();
+
+</script>
+
+</body>
+</html>

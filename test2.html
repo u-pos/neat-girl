@@ -177,6 +177,20 @@ opacity:0.4;
 </div>
 
 <script>
+const ALL_VOICE = [
+"normal5.mp3",
+"good1.mp3","good2.mp3","good3.mp3",
+"success1.mp3","success2.mp3","success3.mp3","success4.mp3",
+"fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"
+];
+
+const voiceCache = {};
+
+ALL_VOICE.forEach(f=>{
+voiceCache[f] = new Audio(f);
+voiceCache[f].load();
+});
+  
 // ===== 画面スライド禁止 =====
 document.addEventListener('touchmove', function(e){
 e.preventDefault();
@@ -233,12 +247,6 @@ const voiceCache = {};
 
 function playRandom(arr){
 let file = arr[Math.floor(Math.random()*arr.length)];
-
-if(!voiceCache[file]){
-voiceCache[file] = new Audio(file);
-voiceCache[file].load();
-}
-
 voiceCache[file].currentTime = 0;
 voiceCache[file].play();
 }
@@ -247,7 +255,7 @@ function play(name){ new Audio(name).play(); }
 function playVoice(type){
 
 if(type==="normal"){
-new Audio("normal5.mp3").play();
+playRandom(["normal5.mp3"]);
 return;
 }
 
@@ -262,9 +270,10 @@ return;
 }
 
 if(type==="fail"){
-playRandom(["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3",]);
+playRandom(["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"]);
 }
 }
+
 // ===== state =====
 let state,mode="home";
 function showTitle(){
@@ -280,15 +289,18 @@ document.getElementById("status").innerHTML="";
 document.getElementById("msg").innerHTML="";
 }
 function startNew(){
-tap();
 
-// ★先にBGMセット（ここ重要）
+// ★BGMを最優先で再生
 bgm.src = getBgmByHouse();
 bgm.loop = true;
 bgm.volume = 0.5;
-bgm.play().catch(()=>{});
 
-currentBgm = bgm.src;
+bgm.play().catch(e=>{
+console.log("BGM NG:", e);
+});
+
+// ★その後にSE
+tap();
 
 newGame();
 }
@@ -304,19 +316,22 @@ return list[Math.floor(Math.random()*list.length)];
 }
 
 function continueGame(){
-tap();
 
-if(loadGame()){
-
+// ★BGMを最優先で再生（これが一番重要）
 bgm.src = getBgmByHouse();
 bgm.loop = true;
 bgm.volume = 0.5;
-bgm.play().catch(()=>{});
 
-currentBgm = bgm.src;
+bgm.play().catch(e=>{
+console.log("BGM NG:", e);
+});
 
+// ★そのあとSE
+tap();
+
+// ★ロード処理
+if(loadGame()){
 render();
-
 }else{
 alert("セーブデータがありません");
 }

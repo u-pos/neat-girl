@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+html, body{
+height:100%;
+overflow:hidden; /* ←スクロール完全禁止 */
+touch-action:none; /* ←スワイプ無効化 */
+}
+
+/* iOS対策 */
+body{
+position:fixed;
+width:100%;
+}
 body{
 margin:0;
 background:#000;
@@ -13,8 +24,12 @@ font-family:sans-serif;
 }
 
 .scene{
-position:relative;
-height:100vh;
+position:fixed; /* ← absoluteじゃなくfixed */
+top:0;
+left:0;
+width:100%;
+height:100%;
+overflow:hidden;
 }
 
 /* ===== 背景 ===== */
@@ -147,7 +162,11 @@ opacity:0.4;
 </div>
 
 <script>
-
+// ===== 画面スライド禁止 =====
+document.addEventListener('touchmove', function(e){
+e.preventDefault();
+}, { passive:false });
+  
 // ===== 音 =====
 function playRandom(arr){
 new Audio(arr[Math.floor(Math.random()*arr.length)]).play();
@@ -372,7 +391,7 @@ m.innerHTML=`
 }
 
 // ===== 共通 =====
-function tap(){ play("tap0.mp3"); }
+function tap(){new Audio("tap1.mp3").play();}
 
 function useSt(n){
 if(state.st<n){
@@ -510,7 +529,7 @@ render();
 function sleep(){
 tap();
 
-// ST回復
+  // ST回復
 state.st = Math.min(state.maxSt, state.st + 80);
 
 // 日付進行
@@ -624,7 +643,8 @@ state.cosmeDay = 7;
 state.msg1="化粧品を購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+new Audio("money.mp3").play();
 
 render();
 }
@@ -639,7 +659,8 @@ state.estheDay = 35;
 state.msg1="エステ機器を購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+new Audio("money.mp3").play();
 
 render();
 }
@@ -655,7 +676,8 @@ state.clothDay = 70;
 state.msg1="勝負服一式を購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+new Audio("money.mp3").play();
 
 render();
 }
@@ -671,7 +693,8 @@ state.accDay = 70;
 state.msg1="高級アクセサリーを購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+new Audio("money.mp3").play();
 
 render();
 }
@@ -687,7 +710,8 @@ state.bagDay = 70;
 state.msg1="ブランドバッグを購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+new Audio("money.mp3").play();
 
 render();
 }

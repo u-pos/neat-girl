@@ -273,7 +273,7 @@ document.getElementById("msg").innerHTML="";
   
 function startNew(){
 
-tapHome(); // ←必ず先
+tapHome();
 
 // ★既存停止
 if(bgm){
@@ -281,43 +281,44 @@ bgm.pause();
 bgm.currentTime = 0;
 }
 
-// ★1つだけ使い回す
-bgm = new Audio(getBgmByHouse());
+// ★ここ統一
+bgm.src = getBgmByHouse();
 bgm.loop = true;
 bgm.volume = 0.5;
 
-// ★ここ重要
+// ★再生
 bgm.play().catch(e=>{
 console.log("BGM失敗:", e);
 });
 
 newGame();
 }
-  
 function continueGame(){
 
-// ★BGMは「ユーザー操作内で即再生」が絶対条件
-let a = new Audio(getBgmByHouse());
-a.loop = true;
-a.volume = 0.5;
+tapHome();
 
-// ★成功したらbgmとして保持
-a.play().then(()=>{
-bgm = a;
-}).catch(e=>{
+// ★既存停止
+if(bgm){
+bgm.pause();
+bgm.currentTime = 0;
+}
+
+// ★同じbgmを使う（重要）
+bgm.src = getBgmByHouse();
+bgm.loop = true;
+bgm.volume = 0.5;
+
+bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
 
-// ===== セーブデータ読み込み =====
 if(loadGame()){
 
-// ★ST上限の再計算（これやらないとズレる）
 state.maxSt = 100;
 if(state.boyfriend === "normal"){
 state.maxSt += 20;
 }
 
-// ★STが上限超えてたら補正
 if(state.st > state.maxSt){
 state.st = state.maxSt;
 }
@@ -327,7 +328,6 @@ render();
 }else{
 alert("セーブデータがありません");
 }
-
 }
 
 function tapHome(){

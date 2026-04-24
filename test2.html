@@ -177,22 +177,14 @@ opacity:0.4;
 </div>
 
 <script>
-const ALL_VOICE = [
-"normal5.mp3",
-"good1.mp3","good2.mp3","good3.mp3",
-"success1.mp3","success2.mp3","success3.mp3","success4.mp3",
-"fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"
-];
-
 const voiceCache = {};
 
-// ★ここ変更（重要）
 ALL_VOICE.forEach(f=>{
 let a = new Audio(f);
 a.preload = "auto";
 a.load();
 
-// ★1回無音再生してデコードさせる
+// ★これが重要（デコードさせる）
 a.muted = true;
 a.play().then(()=>{
 a.pause();
@@ -233,31 +225,7 @@ if(house === "豪邸") return "bgm3.mp3";
 return "bgm1.mp3";
 }
 
-function playBGM(){
 
-let next = getBgmByHouse();
-
-// 同じ曲なら何もしない
-if(currentBgm === next) return;
-
-// 停止
-bgm.pause();
-
-// 切替
-bgm.src = next;
-bgm.loop = true;
-bgm.volume = 0.5;
-
-// 読み込み
-bgm.load();
-
-// 再生（エラー可視化）
-bgm.play().catch(e=>{
-console.log("BGMエラー:", e);
-});
-
-currentBgm = next;
-}
 // ===== 効果音 =====
 function playRandom(arr){
 let file = arr[Math.floor(Math.random()*arr.length)];
@@ -303,7 +271,7 @@ document.getElementById("msg").innerHTML="";
 }
 function startNew(){
 
-// ★ここが最重要
+// ★ユーザー操作内で「生成＋再生」する
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
@@ -312,15 +280,13 @@ bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
 
-// SE
-tap();
+tapHome(); // ←後述（ここも変更）
 
 newGame();
 }
   
 function continueGame(){
 
-// ★ここが最重要
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
@@ -329,8 +295,7 @@ bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
 
-// SE
-tap();
+tapHome();
 
 if(loadGame()){
 render();
@@ -338,7 +303,11 @@ render();
 alert("セーブデータがありません");
 }
 }
-  
+
+function tapHome(){
+SE.tap.currentTime = 0;
+SE.tap.play();
+}
 function getMorningMsg(){
 
 let list = [
@@ -465,8 +434,8 @@ let m=document.getElementById("menu");
 
 if(mode==="home"){
 m.innerHTML=`
-<button class="main-btn" onclick="tap();mode='action';render()">アクション</button>
-<button class="main-btn" onclick="tap();mode='shop';render()">買い物（所持品）</button>
+<button class="main-btn" onclick="tapHome();mode='action';render()">アクション</button>
+<button class="main-btn" onclick="tapHome();mode='shop';render()">買い物（所持品）</button>
 `;
 return;
 }
@@ -481,7 +450,7 @@ m.innerHTML=`
 <button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
 
 <div style="display:flex; gap:6px;">
-<button class="sub-btn" style="flex:7;" onclick="mode='home';render()">戻る</button>
+<button class="sub-btn" style="flex:7;" onclick="tapHome();mode='home';render()">戻る</button>
 <button class="sub-btn" style="flex:3;" onclick="saveGameCustom()">セーブ</button>
 </div>
 `;
@@ -516,9 +485,14 @@ onclick="buyBag()">
 ブランドバッグ（${state.bagDay>0?`残り${state.bagDay}日`:'30万円'}）
 </button>
 
-<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+<button class="sub-btn" onclick="tapHome();mode='home';render()">戻る</button>
 `;
 }
+}
+
+function tapHome(){
+SE.tap.currentTime = 0;
+SE.tap.play();
 }
 // ===== セーブ音つき関数　====
 function saveGameCustom(){

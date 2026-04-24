@@ -239,35 +239,32 @@ a.play().catch(()=>{});
 
 function playVoice(type){
 
-if(type==="normal"){
-playRandom(["normal5.mp3"]);
-return;
-}
+let map = {
+normal:["normal5.mp3"],
+good:["good1.mp3","good2.mp3","good3.mp3"],
+success:["success1.mp3","success2.mp3","success3.mp3","success4.mp3"],
+fail:["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"]
+};
 
-if(type==="good"){
-playRandom(["good1.mp3","good2.mp3","good3.mp3"]);
-return;
-}
+let arr = map[type];
+let file = arr[Math.floor(Math.random()*arr.length)];
 
-if(type==="success"){
-playRandom(["success1.mp3","success2.mp3","success3.mp3","success4.mp3"]);
-return;
-}
-
-if(type==="fail"){
-playRandom(["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"]);
-}
+// ★必ず新規生成
+let a = new Audio(file);
+a.currentTime = 0;
+a.play().catch(()=>{});
 }
 
 // ===== state =====
 let state,mode="home";
+  
 function showTitle(){
 
 let hasSave = localStorage.getItem("saveData");
 
 document.getElementById("menu").innerHTML=`
-<button class="main-btn" onclick="startNew()">はじめから</button>
-<button class="main-btn" onclick="continueGame()" ${!hasSave?'disabled':''}>つづきから</button>
+<button onclick="tapHome(); startNew()">はじめから</button>
+<button onclick="tapHome(); continueGame()">つづきから</button>
 `;
 
 document.getElementById("status").innerHTML="";
@@ -276,84 +273,96 @@ document.getElementById("msg").innerHTML="";
   
 function startNew(){
 
-tapHome();
+// ★ここでBGM再生を先にやる（最重要）
+let a = new Audio(getBgmByHouse());
+a.loop = true;
+a.volume = 0.5;
 
-// ★既存止める
-if(bgm){
-bgm.pause();
-bgm.currentTime = 0;
-}
-
-// ★1回だけ生成
-bgm = new Audio(getBgmByHouse());
-bgm.loop = true;
-bgm.volume = 0.5;
-
-// ★ユーザー操作直後で再生
-bgm.play().catch(e=>{
+a.play().then(()=>{
+bgm = a;
+}).catch(e=>{
 console.log("BGMエラー:", e);
 });
+
+// ★そのあとにtap
+tapHome();
 
 newGame();
 }
   
 function continueGame(){
 
+// ★タップ音（タイトルボタン用）
 tapHome();
 
-if(bgm){
-bgm.pause();
-bgm.currentTime = 0;
-}
+// ★BGMは「ユーザー操作内で即再生」が絶対条件
+let a = new Audio(getBgmByHouse());
+a.loop = true;
+a.volume = 0.5;
 
-bgm = new Audio(getBgmByHouse());
-bgm.loop = true;
-bgm.volume = 0.5;
-
-bgm.play().catch(e=>{
+// ★成功したらbgmとして保持
+a.play().then(()=>{
+bgm = a;
+}).catch(e=>{
 console.log("BGMエラー:", e);
 });
 
+// ===== セーブデータ読み込み =====
 if(loadGame()){
+
+// ★ST上限の再計算（これやらないとズレる）
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+// ★STが上限超えてたら補正
+if(state.st > state.maxSt){
+state.st = state.maxSt;
+}
+
 render();
+
 }else{
 alert("セーブデータがありません");
 }
+
 }
 
 function tapHome(){
 
-let a = SE.tap.cloneNode(); // ★コピー再生
-a.currentTime = 0;
-a.play().catch(()=>{});
+// ★tap音
+let t = SE.tap.cloneNode();
+t.currentTime = 0;
+t.play().catch(()=>{});
 
-// 初回解禁
+// ★初回だけ完全解禁
 if(!window.audioUnlocked){
 
+// ★ここで全音を強制デコード
+let unlockList = [];
+
+// SE
 for(let k in SE){
-let a = SE[k];
+let a = SE[k].cloneNode();
 a.muted = true;
-a.play().then(()=>{
-a.pause();
-a.currentTime = 0;
-a.muted = false;
-}).catch(()=>{});
+unlockList.push(a.play().catch(()=>{}));
 }
 
+// voice
 for(let f in voiceCache){
-let a = voiceCache[f];
+let a = voiceCache[f].cloneNode();
 a.muted = true;
-a.play().then(()=>{
-a.pause();
-a.currentTime = 0;
-a.muted = false;
-}).catch(()=>{});
+unlockList.push(a.play().catch(()=>{}));
 }
 
+// ★全部終わったら
+Promise.all(unlockList).then(()=>{
 window.audioUnlocked = true;
+});
+
 }
 }
-  
 function getMorningMsg(){
 
 let list = [
@@ -685,7 +694,31 @@ decay();
 
 // 彼氏お小遣い
 boyfriendBonus();
+// ★彼氏出現
+if(state.boyfriend === "none"){
 
+let charm = getCharm();
+let r = Math.random();
+
+let type = null;
+
+if(charm >= 20 && charm < 40 && r < 0.1){
+type = "normal";
+}
+if(charm >= 40 && charm < 70 && r < 0.1){
+type = "rich";
+}
+if(charm >= 70 && r < 0.1){
+type = "vip";
+}
+
+if(type){
+state.boyfriend = type;
+state.msg1 = "彼氏ができた！";
+state.msg2 = getBoyName();
+state.char = "success";
+}
+}
 // 朝メッセージ
 if(state.msg1 === "" || state.char === "normal"){
 state.msg1 = getMorningMsg();

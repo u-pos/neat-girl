@@ -249,8 +249,9 @@ fail:["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"]
 let arr = map[type];
 let file = arr[Math.floor(Math.random()*arr.length)];
 
-// ★必ず新規生成
-let a = new Audio(file);
+let base = voiceCache[file];
+let a = base.cloneNode();
+
 a.currentTime = 0;
 a.play().catch(()=>{});
 }
@@ -273,27 +274,28 @@ document.getElementById("msg").innerHTML="";
   
 function startNew(){
 
-// ★ここでBGM再生を先にやる（最重要）
 let a = new Audio(getBgmByHouse());
 a.loop = true;
 a.volume = 0.5;
 
+// ★ここが重要
 a.play().then(()=>{
 bgm = a;
 }).catch(e=>{
-console.log("BGMエラー:", e);
-});
 
-// ★そのあとにtap
-tapHome();
+// ★失敗したら強制再試行
+setTimeout(()=>{
+a.play().then(()=>{
+bgm = a;
+});
+}, 100);
+
+});
 
 newGame();
 }
   
 function continueGame(){
-
-// ★タップ音（タイトルボタン用）
-tapHome();
 
 // ★BGMは「ユーザー操作内で即再生」が絶対条件
 let a = new Audio(getBgmByHouse());
@@ -529,14 +531,15 @@ onclick="buyBag()">
 // ===== セーブ音つき関数　====
 function saveGameCustom(){
 
-
 saveGame();
 
-SE.save.currentTime = 0;
-SE.save.play();
+// ★cloneで再生（重要）
+let a = SE.save.cloneNode();
+a.currentTime = 0;
+a.play().catch(()=>{});
 
 state.msg1="セーブしました！";
-state.msg2="いつでも続きから遊べます";
+state.msg2="また遊ぼうね！";
 
 render();
 }
@@ -672,8 +675,8 @@ render();
 // ===== 就寝 =====
 function sleep(){
 
-SE.sleep.currentTime = 0;
-SE.sleep.play();
+let a = SE.sleep.cloneNode();
+a.play();
 
 fadeTransition(()=>{
 
@@ -829,8 +832,9 @@ state.char = "success";
 
 // ★1秒後に再生（sleep音と被らない）
 setTimeout(()=>{
-SE.money.currentTime = 0;
-SE.money.play();
+let a = SE.money.cloneNode();
+a.currentTime = 0;
+a.play();
 }, 1000);
 
 playVoice("success");
@@ -848,8 +852,9 @@ state.msg1="化粧品を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-SE.money.currentTime = 0;
-SE.money.play();
+let a = SE.money.cloneNode();
+a.currentTime = 0;
+a.play();
 
 render();
 }
@@ -864,8 +869,9 @@ state.msg1="エステ機器を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-SE.money.currentTime = 0;
-SE.money.play();
+let a = SE.money.cloneNode();
+a.currentTime = 0;
+a.play();
 
 render();
 }
@@ -881,8 +887,9 @@ state.msg1="勝負服一式を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-SE.money.currentTime = 0;
-SE.money.play();
+let a = SE.money.cloneNode();
+a.currentTime = 0;
+a.play();
 
 render();
 }
@@ -898,8 +905,9 @@ state.msg1="高級アクセサリーを購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-SE.money.currentTime = 0;
-SE.money.play();
+let a = SE.money.cloneNode();
+a.currentTime = 0;
+a.play();
 
 render();
 }
@@ -916,8 +924,9 @@ state.msg2="魅力+10";
 state.char="good";
   
 // ★変更
-SE.money.currentTime = 0;
-SE.money.play();
+let a = SE.money.cloneNode();
+a.currentTime = 0;
+a.play();
 
 render();
 }

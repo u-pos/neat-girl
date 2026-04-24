@@ -832,21 +832,25 @@ function fadeTransition(callback){
 
 let f = document.getElementById("fade");
 
-// ★暗転はゆっくり（2秒）
+// 暗転（2秒）
 f.style.transition = "opacity 2s ease";
 f.style.opacity = 1;
 
-// ★しっかり暗くなってから処理
 setTimeout(()=>{
 
+try{
 callback();
+}catch(e){
+console.error(e);
+}
 
-// ★明るくなるのは一瞬（0.1秒）
+// ★ここが重要（必ず戻す）
+setTimeout(()=>{
 f.style.transition = "opacity 0.1s linear";
 f.style.opacity = 0;
+}, 50);
 
 }, 2000);
-
 }
 
 // ==== セーブ =====

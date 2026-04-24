@@ -278,17 +278,16 @@ document.getElementById("msg").innerHTML="";
   
 function startNew(){
 
-tapHome(); // ★先にユーザー操作
+tapHome();
 
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 
-setTimeout(()=>{
+// ★遅延なし
 bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
-}, 50);
 
 newGame();
 }
@@ -301,20 +300,22 @@ bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 
-setTimeout(()=>{
 bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
-}, 50);
 
 if(loadGame()){
 
+// ★まず上限決定
 state.maxSt = 100;
 if(state.boyfriend === "normal"){
 state.maxSt += 20;
 }
 
-state.st = Math.min(state.st, state.maxSt);
+// ★その後に補正
+if(state.st > state.maxSt){
+state.st = state.maxSt;
+}
 
 render();
 
@@ -328,9 +329,16 @@ function tapHome(){
 SE.tap.currentTime = 0;
 SE.tap.play();
 
-// ★初回だけ全音デコード
+// ★ここが重要
 if(!window.audioUnlocked){
 
+// BGMもここで解禁
+bgm = new Audio(getBgmByHouse());
+bgm.loop = true;
+bgm.volume = 0.5;
+bgm.play().catch(()=>{});
+
+// SE
 for(let k in SE){
 let a = SE[k];
 a.muted = true;
@@ -341,6 +349,7 @@ a.muted = false;
 }).catch(()=>{});
 }
 
+// voice
 for(let f in voiceCache){
 let a = voiceCache[f];
 a.muted = true;
@@ -662,12 +671,19 @@ render();
 
 // ===== 就寝 =====
 function sleep(){
+
 SE.sleep.currentTime = 0;
 SE.sleep.play();
 
 fadeTransition(()=>{
 
-// ST回復
+// ★先に上限を決める
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+// ★その後に回復
 state.st = Math.min(state.maxSt, state.st + 80);
 
 // 日付進行
@@ -678,12 +694,6 @@ decay();
 
 // 彼氏お小遣い
 boyfriendBonus();
-
-// ST上限再計算
-state.maxSt = 100;
-if(state.boyfriend === "normal"){
-state.maxSt += 20;
-}
 
 // 彼氏イベント
 boyfriendEvent();

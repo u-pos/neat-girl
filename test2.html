@@ -257,16 +257,11 @@ function toggleMute(){
 
 isMuted = !isMuted;
 
-// BGM
+// BGMだけは直接制御
 let bgm = document.getElementById("bgmPlayer");
 bgm.muted = isMuted;
 
-// SE
-for(let k in SE){
-SE[k].muted = isMuted;
-}
-
-// 表示切り替え
+// 表示更新
 document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
 }
 // ===== 効果音 =====
@@ -283,6 +278,8 @@ a.play().catch(()=>{});
 
 function playVoice(type){
 
+if(isMuted) return;
+
 let map = {
 normal:["normal5.mp3"],
 good:["good1.mp3","good2.mp3","good3.mp3"],
@@ -293,12 +290,10 @@ fail:["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"]
 let arr = map[type];
 let file = arr[Math.floor(Math.random()*arr.length)];
 
-// ★毎回生成（iOS安定）
 let a = new Audio(file);
 a.currentTime = 0;
 a.play().catch(()=>{});
 }
-
 // ===== state =====
 let state,mode="home";
   
@@ -808,7 +803,8 @@ playVoice("success");
 }
 
 // ===== 朝メッセージ =====
-if(state.msg1 === "" || state.char === "normal"){
+// ===== 朝メッセージ =====
+if(!state.pendingBoyfriend){
 
 state.msg1 = getMorningMsg();
 state.msg2 = "";

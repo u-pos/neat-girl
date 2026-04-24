@@ -177,6 +177,12 @@ opacity:0.4;
 </div>
 
 <script>
+const ALL_VOICE = [
+"normal5.mp3",
+"good1.mp3","good2.mp3","good3.mp3",
+"success1.mp3","success2.mp3","success3.mp3","success4.mp3",
+"fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"
+];
 const voiceCache = {};
 
 ALL_VOICE.forEach(f=>{
@@ -415,9 +421,6 @@ state.msg1 + "<br>" + state.msg2;
 
 // ===== ボタン描画 =====
 renderMenu();
-// ==== BGM ==== 
-playBGM();
-}
 
 function getBoyName(){
 return{
@@ -490,13 +493,10 @@ onclick="buyBag()">
 }
 }
 
-function tapHome(){
-SE.tap.currentTime = 0;
-SE.tap.play();
-}
+
 // ===== セーブ音つき関数　====
 function saveGameCustom(){
-tap();
+
 
 saveGame();
 
@@ -509,10 +509,7 @@ state.msg2="いつでも続きから遊べます";
 render();
 }
 // ===== 共通 =====
-function tap(){
-SE.tap.currentTime = 0;
-SE.tap.play();
-}
+function tap(){}
 function useSt(n){
 if(state.st<n){
 state.msg1="スタミナが足りない！";
@@ -541,7 +538,6 @@ return true;
 }
 // ===== 行動 =====
 function doSNS(){
-tap();
 if(!useSt(10)) return;
 
 let f = 5 + Math.floor(Math.random()*10);
@@ -555,7 +551,6 @@ playVoice("good");
 render();
 }
 function doEsthe(){
-tap();
 if(!useSt(30)) return;
 if(!pay(5000)) return;
 
@@ -572,7 +567,6 @@ render();
 }
 
 function doStream(){
-tap();
 if(!useSt(50)) return;
 
 let m = 5000 + Math.random()*5000;
@@ -589,7 +583,6 @@ playVoice("success");
 render();
 }
 function doGym(){
-tap();
 if(!useSt(20)) return;
 if(!pay(3000)) return;
 
@@ -607,7 +600,6 @@ playVoice("good");
 render();
 }
 function doPapa(){
-tap();
 if(!useSt(100)) return;
 
 let r = Math.random();
@@ -647,7 +639,6 @@ render();
 
 // ===== 就寝 =====
 function sleep(){
-tap();
 SE.sleep.currentTime = 0;
 SE.sleep.play();
 
@@ -793,7 +784,6 @@ playVoice("success");
 }
 // ===== 買い物 =====
 function buyCosme(){
-tap();
 if(state.cosme >= 1) return;
 if(!pay(10000)) return;
 
@@ -810,7 +800,6 @@ SE.money.play();
 render();
 }
 function buyEsthe(){
-tap();
 if(state.esthe >= 1) return;
 if(!pay(50000)) return;
 
@@ -828,7 +817,6 @@ render();
 }
 
 function buyCloth(){
-tap();
 if(state.cloth >= 1) return;
 if(!pay(100000)) return;
 
@@ -846,7 +834,6 @@ render();
 }
 
 function buyAcc(){
-tap();
 if(state.acc >= 1) return;
 if(!pay(200000)) return;
 
@@ -864,7 +851,6 @@ render();
 }
 
 function buyBag(){
-tap();
 if(state.bag >= 1) return;
 if(!pay(300000)) return;
 
@@ -931,7 +917,6 @@ return true;
   
 // ==== タイトル画面へ遷移 =====
 function saveAndExit(){
-tap();
 saveGame();
 
 state.msg1="セーブしました";

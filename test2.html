@@ -427,22 +427,32 @@ return;
 
 if(mode==="shop"){
 m.innerHTML=`
-<button class="sub-btn" ${state.cosme?'disabled':''} onclick="buyCosme()">化粧品（${state.cosme?`残り${state.cosmeDay}日`:'1万円'}）</button>
-<button class="sub-btn" onclick="buyEsthe()">
+
+<button class="sub-btn" ${state.cosmeDay>0?'disabled':''}
+onclick="buyCosme()">
+化粧品（${state.cosmeDay>0?`残り${state.cosmeDay}日`:'1万円'}）
+</button>
+
+<button class="sub-btn" ${state.estheDay>0?'disabled':''}
+onclick="buyEsthe()">
 エステ機器（${state.estheDay>0?`残り${state.estheDay}日`:'5万円'}）
 </button>
 
-<button class="sub-btn" onclick="buyCloth()">
+<button class="sub-btn" ${state.clothDay>0?'disabled':''}
+onclick="buyCloth()">
 勝負服一式（${state.clothDay>0?`残り${state.clothDay}日`:'10万円'}）
 </button>
 
-<button class="sub-btn" onclick="buyAcc()">
+<button class="sub-btn" ${state.accDay>0?'disabled':''}
+onclick="buyAcc()">
 高級ジュエリー（${state.accDay>0?`残り${state.accDay}日`:'20万円'}）
 </button>
 
-<button class="sub-btn" onclick="buyBag()">
+<button class="sub-btn" ${state.bagDay>0?'disabled':''}
+onclick="buyBag()">
 ブランドバッグ（${state.bagDay>0?`残り${state.bagDay}日`:'30万円'}）
 </button>
+
 <button class="sub-btn" onclick="mode='home';render()">戻る</button>
 `;
 }
@@ -892,7 +902,7 @@ f.style.transition = "opacity 0.1s linear";
 f.style.opacity = 0;
 }, 50);
 
-}, 2000);
+}, 1500);
 }
 
 // ==== セーブ =====

@@ -186,11 +186,22 @@ const ALL_VOICE = [
 
 const voiceCache = {};
 
+// ★ここ変更（重要）
 ALL_VOICE.forEach(f=>{
-voiceCache[f] = new Audio(f);
-voiceCache[f].load();
+let a = new Audio(f);
+a.preload = "auto";
+a.load();
+
+// ★1回無音再生してデコードさせる
+a.muted = true;
+a.play().then(()=>{
+a.pause();
+a.currentTime = 0;
+a.muted = false;
+}).catch(()=>{});
+
+voiceCache[f] = a;
 });
-  
 // ===== 画面スライド禁止 =====
 document.addEventListener('touchmove', function(e){
 e.preventDefault();
@@ -226,7 +237,7 @@ function playBGM(){
 
 let next = getBgmByHouse();
 
-// 同じなら何もしない
+// 同じ曲なら何もしない
 if(currentBgm === next) return;
 
 // 停止
@@ -240,7 +251,7 @@ bgm.volume = 0.5;
 // 読み込み
 bgm.load();
 
-// ★ここを修正（ログ出す）
+// 再生（エラー可視化）
 bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
@@ -292,8 +303,8 @@ document.getElementById("msg").innerHTML="";
 }
 function startNew(){
 
-// ★BGM最優先
-bgm.src = getBgmByHouse();
+// ★ここが最重要
+bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 
@@ -306,21 +317,11 @@ tap();
 
 newGame();
 }
-function getMorningMsg(){
-
-let list = [
-"おはよう！今日は何をする？",
-"ふぁ～よく寝た。さぁ今日はどうしよっかな～！",
-"おはよう～！今日はいい天気だねー。今日は何しよっか。"
-];
-
-return list[Math.floor(Math.random()*list.length)];
-}
-
+  
 function continueGame(){
 
-// ★BGM最優先
-bgm.src = getBgmByHouse();
+// ★ここが最重要
+bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 
@@ -336,6 +337,17 @@ render();
 }else{
 alert("セーブデータがありません");
 }
+}
+  
+function getMorningMsg(){
+
+let list = [
+"おはよう！今日は何をする？",
+"ふぁ～よく寝た。さぁ今日はどうしよっかな～！",
+"おはよう～！今日はいい天気だねー。今日は何しよっか。"
+];
+
+return list[Math.floor(Math.random()*list.length)];
 }
   
 function newGame(){

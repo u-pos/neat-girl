@@ -427,6 +427,7 @@ acc:0,accDay:0,
 bag:0,bagDay:0,
 esthePoint:0,
 estheMiss:0,
+pendingBoyfriend:null,
 msg1: getMorningMsg(), // ←ここ変更
 msg2:"",
 char:"normal"
@@ -489,17 +490,28 @@ renderMenu();
 // ★ここを追加（最重要）
 updateBGM();
 }
+function getBoyName(type){
 
-function getBoyName(){
+let t = type || state.boyfriend;
+
 return{
 none:"なし",
 normal:"通常",
 rich:"小金持ち",
 vip:"大金持ち"
-}[state.boyfriend];
+}[t];
 }
 // ===== メニュー =====
 function renderMenu(){
+if(state.pendingBoyfriend){
+
+m.innerHTML=`
+<button class="main-btn" onclick="acceptBoyfriend()">はい</button>
+<button class="main-btn" onclick="rejectBoyfriend()">いいえ</button>
+`;
+
+return;
+}
 let m=document.getElementById("menu");
 
 if(mode==="home"){
@@ -559,8 +571,29 @@ onclick="buyBag()">
 `;
 }
 }
+function rejectBoyfriend(){
 
+state.pendingBoyfriend = null;
 
+state.msg1 = "今回は見送った。";
+state.msg2 = "";
+state.char = "normal";
+
+render();
+}
+function acceptBoyfriend(){
+
+state.boyfriend = state.pendingBoyfriend;
+state.pendingBoyfriend = null;
+
+state.msg1 = "彼氏ができた！";
+state.msg2 = "";
+state.char = "success";
+
+playVoice("success");
+
+render();
+}
 // ===== セーブ音つき関数　====
 function saveGameCustom(){
 
@@ -734,6 +767,7 @@ boyfriendBonus();
 
 
 // ===== 彼氏出現 =====
+// ===== 彼氏出現 =====
 let charm = getCharm();
 let r = Math.random();
 
@@ -751,22 +785,20 @@ else if(charm >= 70 && r < 0.1){
 candidate = "vip";
 }
 
-// 判定
 if(candidate){
 
-// 同ランクは無視
 if(candidate !== current){
 
-// 上位のみ乗り換え
 if(
 (current === "none") ||
 (current === "normal" && candidate !== "normal") ||
 (current === "rich" && candidate === "vip")
 ){
 
-state.boyfriend = candidate;
+// ★ここが重要
+state.pendingBoyfriend = candidate;
 
-state.msg1 = `彼氏候補（${getBoyName()}）が現れた！`;
+state.msg1 = `彼氏候補（${getBoyName(candidate)}）が現れた！`;
 state.msg2 = "付き合いますか？";
 state.char = "success";
 
@@ -774,7 +806,6 @@ playVoice("success");
 }
 }
 }
-
 
 // ===== 朝メッセージ =====
 if(state.msg1 === "" || state.char === "normal"){
@@ -1041,6 +1072,9 @@ localStorage.setItem("saveData", JSON.stringify(state));
   
 // ==== ロード =====
 function loadGame(){
+if(state.pendingBoyfriend === undefined){
+state.pendingBoyfriend = null;
+}
 let data = localStorage.getItem("saveData");
 if(!data) return false;
 state = JSON.parse(data);

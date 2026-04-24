@@ -374,7 +374,11 @@ m.innerHTML=`
 <button class="sub-btn" onclick="doStream()">Youtubeで配信をする（ST50消費）</button>
 <button class="sub-btn" onclick="doPapa()">パパ活に出かける（ST100消費）</button>
 <button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
-<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+
+<div style="display:flex; gap:6px;">
+<button class="sub-btn" style="flex:7;" onclick="mode='home';render()">戻る</button>
+<button class="sub-btn" style="flex:3;" onclick="saveGameCustom()">セーブ</button>
+</div>
 `;
 return;
 }
@@ -401,7 +405,19 @@ m.innerHTML=`
 `;
 }
 }
+// ===== セーブ音つき関数　====
+function saveGameCustom(){
+tap();
 
+saveGame();
+
+new Audio("save.mp3").play();
+
+state.msg1="セーブしました！";
+state.msg2="いつでも続きから遊べます";
+
+render();
+}
 // ===== 共通 =====
 function tap(){new Audio("tap1.mp3").play();}
 
@@ -580,73 +596,107 @@ render();
 // ===== 劣化 =====
 function decay(){
 
+// 化粧品
 if(state.cosmeDay>0 && --state.cosmeDay===0){
 state.cosme=0;
 state.msg1="化粧品がなくなった...";
 state.msg2="早急に補充しなくちゃ！";
+playVoice("fail");
 }
+
+// エステ機器
 if(state.estheDay>0 && --state.estheDay===0){
 state.esthe=0;
 state.msg1="エステ機器が故障した...";
 state.msg2="壊れるの早すぎだよ～。";
+playVoice("fail");
 }
 
+// 服
 if(state.clothDay>0 && --state.clothDay===0){
 state.cloth=0;
 state.msg1="勝負服が経年劣化した...";
 state.msg2="やばい！これじゃいざという時に困る！";
+playVoice("fail");
 }
 
+// アクセ
 if(state.accDay>0 && --state.accDay===0){
 state.acc=0;
 state.msg1="高級ジュエリーを紛失した...";
 state.msg2="最悪。また買わなくちゃ！";
+playVoice("fail");
 }
 
+// バッグ
 if(state.bagDay>0 && --state.bagDay===0){
 state.bag=0;
 state.msg1="ブランドバッグが経年劣化した...";
 state.msg2="破けちゃった。使い方が悪いのかなぁ。";
+playVoice("fail");
 }
+
+// ジム
 state.gymMiss++;
 if(state.gymMiss>=7 && state.gym>0){
 state.gym--;
 state.msg1="ジムを7日連続でさぼったため魅力が1減少した。";
+playVoice("fail");
 }
+
+// エステ減衰
 state.estheMiss++;
 if(state.estheMiss >= 14 && state.esthePoint > 0){
 state.esthePoint--;
 state.msg1 = "14日連続でエステに行かなかったため魅力1が下がった...";
+playVoice("fail");
 }
 }
 
 // ===== 彼氏 =====
-function boyfriendEvent(){
+function boyfriendBonus(){
 
-if(Math.random()>0.1)return;
+if(state.boyfriend === "none") return;
 
-let c=getCharm();
-let type=null;
+let r = Math.random();
+let money = 0;
 
-if(c>=20&&c<40) type="normal";
-if(c>=40&&c<70) type="rich";
-if(c>=70) type="vip";
-
-if(!type || state.boyfriend===type) return;
-
-play("msg.mp3");
-
-let name={
-normal:"通常",
-rich:"小金持ち",
-vip:"大金持ち"
-};
-
-if(confirm(`彼氏候補（${name[type]}）が現れた！付き合う？`)){
-state.boyfriend=type;
-}
+// 通常彼氏
+if(state.boyfriend === "normal"){
+if(r < 0.1) money = 10000;
 }
 
+// 小金持ち
+if(state.boyfriend === "rich"){
+if(r < 0.2) money = 10000;
+else if(r < 0.35) money = 20000;
+else if(r < 0.45) money = 30000;
+}
+
+// 大金持ち
+if(state.boyfriend === "vip"){
+if(r < 0.2) money = 100000;
+else if(r < 0.35) money = 200000;
+else if(r < 0.45) money = 300000;
+}
+
+// お金もらえた場合
+if(money > 0){
+state.money += money;
+
+state.msg1 = "ラッキー♪";
+state.msg2 = `彼氏が${Math.floor(money/10000)}万円のおこづかいをくれた！`;
+
+state.char = "success";
+
+// ★1秒後に再生（sleep音と被らない）
+setTimeout(()=>{
+new Audio("money.mp3").play();
+}, 1000);
+
+playVoice("success");
+}
+}
 // ===== 買い物 =====
 function buyCosme(){
 tap();
@@ -769,36 +819,50 @@ state.char = "success";
 playVoice("success");
 }
 }
+// ==== お金が足りない時のメッセージ =====
 function failMoney(){
 state.msg1="お金が足りない";
 state.msg2="なんとかしてお金をGETしなければ！";
 state.char="fail";
 render();
 }
+
+// ==== トランジション設定 =====
 function fadeTransition(callback){
 
 let f = document.getElementById("fade");
 
-// フェードアウト
+// ★暗転はゆっくり（2秒）
+f.style.transition = "opacity 2s ease";
 f.style.opacity = 1;
 
+// ★しっかり暗くなってから処理
 setTimeout(()=>{
+
 callback();
+
+// ★明るくなるのは一瞬（0.1秒）
+f.style.transition = "opacity 0.1s linear";
 f.style.opacity = 0;
-}, 500);
+
+}, 2000);
 
 }
+
+// ==== セーブ =====
 function saveGame(){
 localStorage.setItem("saveData", JSON.stringify(state));
 }
-
+  
+// ==== ロード =====
 function loadGame(){
 let data = localStorage.getItem("saveData");
 if(!data) return false;
 state = JSON.parse(data);
 return true;
 }
-
+  
+// ==== タイトル画面へ遷移 =====
 function saveAndExit(){
 tap();
 saveGame();

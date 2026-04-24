@@ -165,6 +165,7 @@ opacity:0.4;
 <body>
 
 <div class="scene">
+<audio id="bgmPlayer" src="bgm1.mp3" loop></audio>
 <img class="bg" src="bg_home.png">
 <img class="char" id="char">
 <img class="bf" id="bf" style="display:none;">
@@ -223,7 +224,20 @@ if(house === "豪邸") return "bgm3.mp3";
 
 return "bgm1.mp3";
 }
+function updateBGM(){
 
+let bgm = document.getElementById("bgmPlayer");
+let next = getBgmByHouse();
+
+// 同じ曲なら何もしない
+if(bgm.src.includes(next)) return;
+
+// 切り替え
+bgm.src = next;
+bgm.volume = 0.5;
+
+bgm.play().catch(()=>{});
+}
 
 // ===== 効果音 =====
 function playRandom(arr){
@@ -275,20 +289,15 @@ function startNew(){
 
 tapHome();
 
-// ★既存停止
-if(bgm){
-bgm.pause();
-bgm.currentTime = 0;
-}
+let bgm = document.getElementById("bgmPlayer");
 
-// ★ここ統一
+// ★曲切り替え
 bgm.src = getBgmByHouse();
-bgm.loop = true;
 bgm.volume = 0.5;
 
-// ★再生
+// ★強制再生
 bgm.play().catch(e=>{
-console.log("BGM失敗:", e);
+console.log("BGMエラー:", e);
 });
 
 newGame();
@@ -297,15 +306,9 @@ function continueGame(){
 
 tapHome();
 
-// ★既存停止
-if(bgm){
-bgm.pause();
-bgm.currentTime = 0;
-}
+let bgm = document.getElementById("bgmPlayer");
 
-// ★同じbgmを使う（重要）
 bgm.src = getBgmByHouse();
-bgm.loop = true;
 bgm.volume = 0.5;
 
 bgm.play().catch(e=>{
@@ -453,6 +456,8 @@ document.getElementById("msg").innerHTML =
 state.msg1 + "<br>" + state.msg2;
 
 renderMenu();
+// ★ここを追加（最重要）
+updateBGM();
 }
 
 function getBoyName(){

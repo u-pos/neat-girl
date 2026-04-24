@@ -9,7 +9,17 @@ body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
 .scene{position:relative;height:100vh;}
 .bg{position:absolute;width:100%;height:100%;object-fit:cover;}
 .char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
-
+.bf{
+position:absolute;
+bottom:0;
+left:65%; /* 主人公の右後ろに配置 */
+transform:translateX(-50%);
+height:40%; /* 主人公(75%)の約半分 */
+z-index:1; /* 主人公より後ろ */
+}
+.char{
+z-index:2; /* 主人公を前に出す */
+}
 /* 左上 */
 .status{
 position:absolute;
@@ -83,7 +93,7 @@ border:none;
 <div class="scene">
 <img class="bg" src="bg_home.png">
 <img class="char" id="char">
-
+<img class="bf" id="bf" style="display:none;">
 <div class="status" id="status"></div>
 <div class="stbox" id="stbox"></div>
 <div class="msg" id="msg"></div>
@@ -206,23 +216,56 @@ return Math.min(100,c);
 // ===== 表示 =====
 function render(){
 
-document.getElementById("char").src="char_"+state.char+".png";
+// ===== 主人公キャラ =====
+document.getElementById("char").src = "char_" + state.char + ".png";
 
+
+// ===== 彼氏表示 =====
+let bf = document.getElementById("bf");
+
+if(state.boyfriend === "none"){
+bf.style.display = "none";
+}else{
+bf.style.display = "block";
+
+if(state.boyfriend === "normal"){
+bf.src = "kareshi1.png";
+}
+if(state.boyfriend === "rich"){
+bf.src = "kareshi2.png";
+}
+if(state.boyfriend === "vip"){
+bf.src = "kareshi3.png";
+}
+}
+
+
+// ===== 左上ステータス =====
 document.getElementById("status").innerHTML=`
 20歳${state.day}日目（${getHouseName()}）<br>
 所持金 ${Math.floor(state.money)}円<br>
 魅力:${getCharm()} 信用:${state.trust} フォロワー:${state.followers}
 `;
 
-document.getElementById("stbox").innerHTML=
-`ST ${state.st}/${state.maxSt}
-<div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>
-彼氏:${getBoyName()} / 太客0人`;
 
+// ===== 右上 =====
+document.getElementById("stbox").innerHTML=`
+ST ${state.st}/${state.maxSt}
+<div class="bar">
+<div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div>
+</div>
+彼氏:${getBoyName()} / 太客0人
+`;
+
+
+// ===== メッセージ =====
 document.getElementById("msg").innerHTML=
-state.msg1+"<br>"+state.msg2;
+state.msg1 + "<br>" + state.msg2;
 
+
+// ===== ボタン描画 =====
 renderMenu();
+
 }
 
 function getBoyName(){
@@ -421,17 +464,34 @@ render();
 function sleep(){
 tap();
 
+// ST回復
 state.st = Math.min(state.maxSt, state.st + 80);
+
+// 日付進行
 state.day++;
 
+// 減衰
 decay();
+
+// ★彼氏お小遣い
+boyfriendBonus();
+
+// ★ST上限再計算
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+// ★彼氏イベント
 boyfriendEvent();
 
+// ★ここが質問の部分
+if(state.msg1 === "" || state.char === "normal"){
 state.msg1 = getMorningMsg();
 state.msg2 = "";
 state.char = "normal";
-
 playVoice("normal");
+}
 
 render();
 }
@@ -585,7 +645,43 @@ playVoice("good");
 
 render();
 }
+function boyfriendBonus(){
 
+if(state.boyfriend === "none") return;
+
+let r = Math.random();
+let money = 0;
+
+// 通常彼氏
+if(state.boyfriend === "normal"){
+if(r < 0.1) money = 10000;
+}
+
+// 小金持ち
+if(state.boyfriend === "rich"){
+if(r < 0.2) money = 10000;
+else if(r < 0.35) money = 20000;
+else if(r < 0.45) money = 30000;
+}
+
+// 大金持ち
+if(state.boyfriend === "vip"){
+if(r < 0.2) money = 100000;
+else if(r < 0.35) money = 200000;
+else if(r < 0.45) money = 300000;
+}
+
+// お金もらえた場合
+if(money > 0){
+state.money += money;
+
+state.msg1 = "ラッキー♪";
+state.msg2 = `彼氏が${Math.floor(money/10000)}万円のおこづかいをくれた！`;
+
+state.char = "success";
+playVoice("success");
+}
+}
 function failMoney(){
 state.msg1="お金が足りない";
 state.msg2="なんとかしてお金をGETしなければ！";

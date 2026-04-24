@@ -397,6 +397,7 @@ acc:0,accDay:0,
 bag:0,bagDay:0,
 esthePoint:0,
 estheMiss:0,
+saveReady:false,
 msg1: getMorningMsg(), // ←ここ変更
 msg2:"",
 char:"normal"
@@ -490,13 +491,16 @@ m.innerHTML=`
 <button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
 
 <div style="display:flex; gap:6px;">
-<button class="sub-btn" onclick="tapHome(); setTimeout(()=>{mode='home';render()},0)">戻る</button>
-<button class="sub-btn" style="flex:3;" onclick="saveGameCustom()">セーブ</button>
+<button class="sub-btn" style="flex:7;" onclick="handleBack()">戻る</button>
+
+<button class="sub-btn" style="flex:3;" onclick="handleSaveButton()">
+${state.saveReady ? "タイトルへ" : "セーブ"}
+</button>
 </div>
 `;
 return;
 }
-
+  
 if(mode==="shop"){
 m.innerHTML=`
 
@@ -529,8 +533,47 @@ onclick="buyBag()">
 `;
 }
 }
+  
+//====戻るボタン専用関数====
+function handleBack(){
 
+tapHome();
 
+// ★ここが今回の仕様の核
+state.saveReady = false;
+
+mode = "home";
+render();
+}
+//====セーブボタン処理====
+function handleSaveButton(){
+
+if(!state.saveReady){
+
+// セーブ
+saveGame();
+
+if(!isMuted){
+let a = new Audio("save.mp3");
+a.play();
+}
+
+state.msg1="セーブしました！";
+state.msg2="タイトルへ戻れます";
+
+// ★状態変更
+state.saveReady = true;
+
+render();
+
+}else{
+
+// タイトルへ
+showTitle();
+
+}
+}
+  
 // ===== セーブ音つき関数　====
 function saveGameCustom(){
 

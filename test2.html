@@ -257,11 +257,9 @@ function toggleMute(){
 
 isMuted = !isMuted;
 
-// BGMだけは直接制御
 let bgm = document.getElementById("bgmPlayer");
 bgm.muted = isMuted;
 
-// 表示更新
 document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
 }
 // ===== 効果音 =====

@@ -5,12 +5,78 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
-.scene{position:relative;height:100vh;}
-.bg{position:absolute;width:100%;height:100%;object-fit:cover;}
-.char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
+html, body{
+height:100%;
+overflow:hidden; /* ←スクロール完全禁止 */
+touch-action:none; /* ←スワイプ無効化 */
+}
 
-/* 左上 */
+/* iOS対策 */
+body{
+position:fixed;
+width:100%;
+}
+body{
+margin:0;
+background:#000;
+color:#fff;
+font-family:sans-serif;
+}
+
+.scene{
+position:fixed; /* ← absoluteじゃなくfixed */
+top:0;
+left:0;
+width:100%;
+height:100%;
+overflow:hidden;
+}
+  /* =====フェード処理 ===== */
+#fade{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000;
+opacity:0;
+pointer-events:none;
+z-index:999; /* 最前面 */
+transition:opacity 0.25s ease;
+}
+  
+/* ===== 背景 ===== */
+.bg{
+position:absolute;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:0;
+}
+
+/* ===== 彼氏 ===== */
+.bf{
+position:absolute;
+bottom:25vh;
+left:85%;
+transform:translateX(-50%);
+height:50%;
+z-index:1;
+pointer-events:none; /* ←クリックを通す */
+}
+
+/* ===== 主人公 ===== */
+.char{
+position:absolute;
+bottom:0;
+left:50%;
+transform:translateX(-50%);
+height:75%;
+z-index:2;
+pointer-events:none; /* ←これが一番重要 */
+}
+
+/* ===== 左上 ===== */
 .status{
 position:absolute;
 top:10px;
@@ -19,9 +85,10 @@ background:rgba(0,0,0,0.6);
 padding:8px;
 border-radius:8px;
 font-size:12px;
+z-index:10;
 }
 
-/* 右上 */
+/* ===== 右上 ===== */
 .stbox{
 position:absolute;
 top:10px;
@@ -31,12 +98,22 @@ padding:6px;
 border-radius:8px;
 font-size:12px;
 width:140px;
+z-index:10;
 }
 
-.bar{height:8px;background:#333;border-radius:4px;margin-top:3px;}
-.bar-inner{height:100%;background:#0f0;}
+/* ===== スタミナバー ===== */
+.bar{
+height:8px;
+background:#333;
+border-radius:4px;
+margin-top:3px;
+}
+.bar-inner{
+height:100%;
+background:#0f0;
+}
 
-/* メッセージ */
+/* ===== メッセージ ===== */
 .msg{
 position:absolute;
 top:90px;
@@ -46,14 +123,16 @@ background:rgba(0,0,0,0.6);
 padding:8px;
 border-radius:8px;
 min-height:40px;
+z-index:10;
 }
 
-/* ボタン */
+/* ===== ボタン ===== */
 .menu{
 position:absolute;
 bottom:35px;
 left:10px;
 right:10px;
+z-index:20; /* ←最前面 */
 }
 
 .main-btn{
@@ -75,70 +154,217 @@ background:rgba(50,50,50,0.7);
 color:#fff;
 border:none;
 }
+
+/* 押せない状態 */
+button:disabled{
+opacity:0.4;
+}
 </style>
 </head>
 
 <body>
 
 <div class="scene">
+<audio id="bgmPlayer" src="bgm1.mp3" loop></audio>
 <img class="bg" src="bg_home.png">
 <img class="char" id="char">
-
+<img class="bf" id="bf" style="display:none;">
 <div class="status" id="status"></div>
 <div class="stbox" id="stbox"></div>
 <div class="msg" id="msg"></div>
 <div class="menu" id="menu"></div>
+<!-- ★これを追加 -->
+<div id="fade"></div>
 </div>
 
 <script>
+const ALL_VOICE = [
+"normal5.mp3",
+"good1.mp3","good2.mp3","good3.mp3",
+"success1.mp3","success2.mp3","success3.mp3","success4.mp3",
+"fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"
+];
+const voiceCache = {};
 
-// ===== 音 =====
-function playRandom(arr){
-new Audio(arr[Math.floor(Math.random()*arr.length)]).play();
+ALL_VOICE.forEach(f=>{
+let a = new Audio(f);
+a.preload = "auto";
+a.load();
+
+voiceCache[f] = a;
+});
+
+// ===== 画面スライド禁止 =====
+document.addEventListener('touchmove', function(e){
+e.preventDefault();
+}, { passive:false });
+  
+let bgm = new Audio();
+let currentBgm = "";
+const SE = {
+tap: new Audio("tap1.mp3"),
+money: new Audio("money.mp3"),
+sleep: new Audio("sleep.mp3"),
+save: new Audio("save.mp3")
+};
+
+// 全部事前読み込み
+for(let k in SE){
+SE[k].load();
 }
-function play(name){ new Audio(name).play(); }
+// ====BGM====
+function getBgmByHouse(){
+
+let house = getHouseName();
+
+if(house === "実家") return "bgm1.mp3";
+if(house === "マンション") return "bgm2.mp3";
+if(house === "タワマン") return "bgm3.mp3";
+if(house === "豪邸") return "bgm3.mp3";
+
+return "bgm1.mp3";
+}
+function updateBGM(){
+
+let bgm = document.getElementById("bgmPlayer");
+let next = getBgmByHouse();
+
+// 同じ曲なら何もしない
+if(bgm.src.includes(next)) return;
+
+// 切り替え
+bgm.src = next;
+bgm.volume = 0.5;
+
+bgm.play().catch(()=>{});
+}
+
+// ===== 効果音 =====
+function playRandom(arr){
+let file = arr[Math.floor(Math.random()*arr.length)];
+let base = voiceCache[file];
+
+// ★毎回コピーを作る
+let a = base.cloneNode();
+
+a.currentTime = 0;
+a.play().catch(()=>{});
+}
 
 function playVoice(type){
 
-if(type==="normal"){
-if(Math.random()<0.2){
-playRandom(["normal1.mp3","normal2.mp3","normal3.mp3","normal4.mp3"]);
-}
-return;
-}
+let map = {
+normal:["normal5.mp3"],
+good:["good1.mp3","good2.mp3","good3.mp3"],
+success:["success1.mp3","success2.mp3","success3.mp3","success4.mp3"],
+fail:["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"]
+};
 
-if(type==="good"){
-playRandom(["good1.mp3","good2.mp3","good3.mp3"]);
-return;
-}
+let arr = map[type];
+let file = arr[Math.floor(Math.random()*arr.length)];
 
-if(type==="success"){
-playRandom(["success1.mp3","success2.mp3","success3.mp3","success4.mp3"]);
-return;
-}
-
-if(type==="fail"){
-playRandom(["fail1.mp3","fail2.mp3"]);
-}
+// ★毎回生成（iOS安定）
+let a = new Audio(file);
+a.currentTime = 0;
+a.play().catch(()=>{});
 }
 
 // ===== state =====
 let state,mode="home";
+  
 function showTitle(){
 
 let hasSave = localStorage.getItem("saveData");
 
 document.getElementById("menu").innerHTML=`
-<button class="main-btn" onclick="startNew()">はじめから</button>
-<button class="main-btn" onclick="continueGame()" ${!hasSave?'disabled':''}>つづきから</button>
+<button onclick="tapHome(); startNew()">はじめから</button>
+<button onclick="tapHome(); continueGame()">つづきから</button>
 `;
 
 document.getElementById("status").innerHTML="";
 document.getElementById("msg").innerHTML="";
 }
-  function startNew(){
-tap();
+  
+function startNew(){
+
+tapHome();
+
+let bgm = document.getElementById("bgmPlayer");
+
+// ★曲切り替え
+bgm.src = getBgmByHouse();
+bgm.volume = 0.5;
+
+// ★強制再生
+bgm.play().catch(e=>{
+console.log("BGMエラー:", e);
+});
+
 newGame();
+}
+function continueGame(){
+
+tapHome();
+
+let bgm = document.getElementById("bgmPlayer");
+
+bgm.src = getBgmByHouse();
+bgm.volume = 0.5;
+
+bgm.play().catch(e=>{
+console.log("BGMエラー:", e);
+});
+
+if(loadGame()){
+
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+if(state.st > state.maxSt){
+state.st = state.maxSt;
+}
+
+render();
+
+}else{
+alert("セーブデータがありません");
+}
+}
+
+function tapHome(){
+
+// ★タップ音（ここはcloneでOK）
+let t = SE.tap.cloneNode();
+t.currentTime = 0;
+t.play().catch(()=>{});
+
+// ★初回だけ全音デコード（←ここに入れるのが正解）
+if(!window.audioUnlocked){
+
+let list = [
+"money.mp3",
+"sleep.mp3",
+"save.mp3",
+"tap1.mp3",
+...ALL_VOICE
+];
+
+// ★ここが重要
+list.forEach(f=>{
+let a = new Audio(f);
+a.muted = true;
+
+a.play().then(()=>{
+a.pause();
+a.currentTime = 0;
+a.muted = false;
+}).catch(()=>{});
+});
+
+window.audioUnlocked = true;
+}
 }
 function getMorningMsg(){
 
@@ -149,14 +375,6 @@ let list = [
 ];
 
 return list[Math.floor(Math.random()*list.length)];
-}
-function continueGame(){
-tap();
-if(loadGame()){
-render();
-}else{
-alert("セーブデータがありません");
-}
 }
   
 function newGame(){
@@ -206,7 +424,19 @@ return Math.min(100,c);
 // ===== 表示 =====
 function render(){
 
-document.getElementById("char").src="char_"+state.char+".png";
+document.getElementById("char").src = "char_" + state.char + ".png";
+
+let bf = document.getElementById("bf");
+
+if(state.boyfriend === "none"){
+bf.style.display = "none";
+}else{
+bf.style.display = "block";
+
+if(state.boyfriend === "normal") bf.src = "kareshi1.png";
+if(state.boyfriend === "rich") bf.src = "kareshi2.png";
+if(state.boyfriend === "vip") bf.src = "kareshi3.png";
+}
 
 document.getElementById("status").innerHTML=`
 20歳${state.day}日目（${getHouseName()}）<br>
@@ -214,15 +444,20 @@ document.getElementById("status").innerHTML=`
 魅力:${getCharm()} 信用:${state.trust} フォロワー:${state.followers}
 `;
 
-document.getElementById("stbox").innerHTML=
-`ST ${state.st}/${state.maxSt}
-<div class="bar"><div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div></div>
-彼氏:${getBoyName()} / 太客0人`;
+document.getElementById("stbox").innerHTML=`
+ST ${state.st}/${state.maxSt}
+<div class="bar">
+<div class="bar-inner" style="width:${state.st/state.maxSt*100}%"></div>
+</div>
+彼氏:${getBoyName()} / 太客0人
+`;
 
-document.getElementById("msg").innerHTML=
-state.msg1+"<br>"+state.msg2;
+document.getElementById("msg").innerHTML =
+state.msg1 + "<br>" + state.msg2;
 
 renderMenu();
+// ★ここを追加（最重要）
+updateBGM();
 }
 
 function getBoyName(){
@@ -233,15 +468,14 @@ rich:"小金持ち",
 vip:"大金持ち"
 }[state.boyfriend];
 }
-
 // ===== メニュー =====
 function renderMenu(){
 let m=document.getElementById("menu");
 
 if(mode==="home"){
 m.innerHTML=`
-<button class="main-btn" onclick="tap();mode='action';render()">アクション</button>
-<button class="main-btn" onclick="tap();mode='shop';render()">買い物（所持品）</button>
+<button class="main-btn" onclick="tapHome(); setTimeout(()=>{mode='action';render()},0)">アクション</button>
+<button class="main-btn" onclick="tapHome(); setTimeout(()=>{mode='shop';render()},0)">買い物（所持品）</button>
 `;
 return;
 }
@@ -254,37 +488,66 @@ m.innerHTML=`
 <button class="sub-btn" onclick="doStream()">Youtubeで配信をする（ST50消費）</button>
 <button class="sub-btn" onclick="doPapa()">パパ活に出かける（ST100消費）</button>
 <button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
-<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+
+<div style="display:flex; gap:6px;">
+<button class="sub-btn" onclick="tapHome(); setTimeout(()=>{mode='home';render()},0)">戻る</button>
+<button class="sub-btn" style="flex:3;" onclick="saveGameCustom()">セーブ</button>
+</div>
 `;
 return;
 }
 
 if(mode==="shop"){
 m.innerHTML=`
-<button class="sub-btn" ${state.cosme?'disabled':''} onclick="buyCosme()">化粧品（${state.cosme?`残り${state.cosmeDay}日`:'1万円'}）</button>
-<button class="sub-btn" onclick="buyEsthe()">
+
+<button class="sub-btn" ${state.cosmeDay>0?'disabled':''}
+onclick="buyCosme()">
+化粧品（${state.cosmeDay>0?`残り${state.cosmeDay}日`:'1万円'}）
+</button>
+
+<button class="sub-btn" ${state.estheDay>0?'disabled':''}
+onclick="buyEsthe()">
 エステ機器（${state.estheDay>0?`残り${state.estheDay}日`:'5万円'}）
 </button>
 
-<button class="sub-btn" onclick="buyCloth()">
+<button class="sub-btn" ${state.clothDay>0?'disabled':''}
+onclick="buyCloth()">
 勝負服一式（${state.clothDay>0?`残り${state.clothDay}日`:'10万円'}）
 </button>
 
-<button class="sub-btn" onclick="buyAcc()">
+<button class="sub-btn" ${state.accDay>0?'disabled':''}
+onclick="buyAcc()">
 高級ジュエリー（${state.accDay>0?`残り${state.accDay}日`:'20万円'}）
 </button>
 
-<button class="sub-btn" onclick="buyBag()">
+<button class="sub-btn" ${state.bagDay>0?'disabled':''}
+onclick="buyBag()">
 ブランドバッグ（${state.bagDay>0?`残り${state.bagDay}日`:'30万円'}）
 </button>
-<button class="sub-btn" onclick="mode='home';render()">戻る</button>
+
+<button class="sub-btn" onclick="tapHome();mode='home';render()">戻る</button>
 `;
 }
 }
 
-// ===== 共通 =====
-function tap(){ play("tap0.mp3"); }
 
+// ===== セーブ音つき関数　====
+function saveGameCustom(){
+
+saveGame();
+
+// ★cloneで再生（重要）
+let a = SE.save.cloneNode();
+a.currentTime = 0;
+a.play().catch(()=>{});
+
+state.msg1="セーブしました！";
+state.msg2="また遊ぼうね！";
+
+render();
+}
+// ===== 共通 =====
+function tap(){}
 function useSt(n){
 if(state.st<n){
 state.msg1="スタミナが足りない！";
@@ -313,7 +576,6 @@ return true;
 }
 // ===== 行動 =====
 function doSNS(){
-tap();
 if(!useSt(10)) return;
 
 let f = 5 + Math.floor(Math.random()*10);
@@ -327,7 +589,6 @@ playVoice("good");
 render();
 }
 function doEsthe(){
-tap();
 if(!useSt(30)) return;
 if(!pay(5000)) return;
 
@@ -344,7 +605,6 @@ render();
 }
 
 function doStream(){
-tap();
 if(!useSt(50)) return;
 
 let m = 5000 + Math.random()*5000;
@@ -361,7 +621,6 @@ playVoice("success");
 render();
 }
 function doGym(){
-tap();
 if(!useSt(20)) return;
 if(!pay(3000)) return;
 
@@ -379,7 +638,6 @@ playVoice("good");
 render();
 }
 function doPapa(){
-tap();
 if(!useSt(100)) return;
 
 let r = Math.random();
@@ -419,96 +677,173 @@ render();
 
 // ===== 就寝 =====
 function sleep(){
-tap();
 
+let a = SE.sleep.cloneNode();
+a.play();
+
+fadeTransition(()=>{
+
+// ★先に上限を決める
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+// ★その後に回復
 state.st = Math.min(state.maxSt, state.st + 80);
+
+// 日付進行
 state.day++;
 
+// 減衰
 decay();
-boyfriendEvent();
 
+// 彼氏お小遣い
+boyfriendBonus();
+// ★彼氏出現
+if(state.boyfriend === "none"){
+
+let charm = getCharm();
+let r = Math.random();
+
+let type = null;
+
+if(charm >= 20 && charm < 40 && r < 0.1){
+type = "normal";
+}
+if(charm >= 40 && charm < 70 && r < 0.1){
+type = "rich";
+}
+if(charm >= 70 && r < 0.1){
+type = "vip";
+}
+
+if(type){
+state.boyfriend = type;
+state.msg1 = "彼氏ができた！";
+state.msg2 = getBoyName();
+state.char = "success";
+}
+}
+// 朝メッセージ
+if(state.msg1 === "" || state.char === "normal"){
 state.msg1 = getMorningMsg();
 state.msg2 = "";
 state.char = "normal";
-
 playVoice("normal");
-
-render();
 }
 
+render();
+
+});
+}
 // ===== 劣化 =====
 function decay(){
 
+// 化粧品
 if(state.cosmeDay>0 && --state.cosmeDay===0){
 state.cosme=0;
 state.msg1="化粧品がなくなった...";
 state.msg2="早急に補充しなくちゃ！";
+playVoice("fail");
 }
+
+// エステ機器
 if(state.estheDay>0 && --state.estheDay===0){
 state.esthe=0;
 state.msg1="エステ機器が故障した...";
 state.msg2="壊れるの早すぎだよ～。";
+playVoice("fail");
 }
 
+// 服
 if(state.clothDay>0 && --state.clothDay===0){
 state.cloth=0;
 state.msg1="勝負服が経年劣化した...";
 state.msg2="やばい！これじゃいざという時に困る！";
+playVoice("fail");
 }
 
+// アクセ
 if(state.accDay>0 && --state.accDay===0){
 state.acc=0;
 state.msg1="高級ジュエリーを紛失した...";
 state.msg2="最悪。また買わなくちゃ！";
+playVoice("fail");
 }
 
+// バッグ
 if(state.bagDay>0 && --state.bagDay===0){
 state.bag=0;
 state.msg1="ブランドバッグが経年劣化した...";
 state.msg2="破けちゃった。使い方が悪いのかなぁ。";
+playVoice("fail");
 }
+
+// ジム
 state.gymMiss++;
 if(state.gymMiss>=7 && state.gym>0){
 state.gym--;
 state.msg1="ジムを7日連続でさぼったため魅力が1減少した。";
+playVoice("fail");
 }
+
+// エステ減衰
 state.estheMiss++;
 if(state.estheMiss >= 14 && state.esthePoint > 0){
 state.esthePoint--;
 state.msg1 = "14日連続でエステに行かなかったため魅力1が下がった...";
+playVoice("fail");
 }
 }
 
 // ===== 彼氏 =====
-function boyfriendEvent(){
+function boyfriendBonus(){
 
-if(Math.random()>0.1)return;
+if(state.boyfriend === "none") return;
 
-let c=getCharm();
-let type=null;
+let r = Math.random();
+let money = 0;
 
-if(c>=20&&c<40) type="normal";
-if(c>=40&&c<70) type="rich";
-if(c>=70) type="vip";
-
-if(!type || state.boyfriend===type) return;
-
-play("msg.mp3");
-
-let name={
-normal:"通常",
-rich:"小金持ち",
-vip:"大金持ち"
-};
-
-if(confirm(`彼氏候補（${name[type]}）が現れた！付き合う？`)){
-state.boyfriend=type;
-}
+// 通常彼氏
+if(state.boyfriend === "normal"){
+if(r < 0.1) money = 10000;
 }
 
+// 小金持ち
+if(state.boyfriend === "rich"){
+if(r < 0.2) money = 10000;
+else if(r < 0.35) money = 20000;
+else if(r < 0.45) money = 30000;
+}
+
+// 大金持ち
+if(state.boyfriend === "vip"){
+if(r < 0.2) money = 100000;
+else if(r < 0.35) money = 200000;
+else if(r < 0.45) money = 300000;
+}
+
+// お金もらえた場合
+if(money > 0){
+state.money += money;
+
+state.msg1 = "ラッキー♪";
+state.msg2 = `彼氏が${Math.floor(money/10000)}万円のおこづかいをくれた！`;
+
+state.char = "success";
+
+// ★1秒後に再生（sleep音と被らない）
+setTimeout(()=>{
+let a = new Audio("money.mp3");
+a.play();
+}, 1000);
+
+playVoice("success");
+}
+}
 // ===== 買い物 =====
 function buyCosme(){
-tap();
 if(state.cosme >= 1) return;
 if(!pay(10000)) return;
 
@@ -518,12 +853,13 @@ state.cosmeDay = 7;
 state.msg1="化粧品を購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+let a = new Audio("money.mp3");
+a.play();
 
 render();
 }
 function buyEsthe(){
-tap();
 if(state.esthe >= 1) return;
 if(!pay(50000)) return;
 
@@ -533,13 +869,14 @@ state.estheDay = 35;
 state.msg1="エステ機器を購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+let a = new Audio("money.mp3");
+a.play();
 
 render();
 }
 
 function buyCloth(){
-tap();
 if(state.cloth >= 1) return;
 if(!pay(100000)) return;
 
@@ -549,13 +886,14 @@ state.clothDay = 70;
 state.msg1="勝負服一式を購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+let a = new Audio("money.mp3");
+a.play();
 
 render();
 }
 
 function buyAcc(){
-tap();
 if(state.acc >= 1) return;
 if(!pay(200000)) return;
 
@@ -565,13 +903,14 @@ state.accDay = 70;
 state.msg1="高級アクセサリーを購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+// ★変更
+let a = new Audio("money.mp3");
+a.play();
 
 render();
 }
 
 function buyBag(){
-tap();
 if(state.bag >= 1) return;
 if(!pay(300000)) return;
 
@@ -581,30 +920,70 @@ state.bagDay = 70;
 state.msg1="ブランドバッグを購入した！";
 state.msg2="魅力+10";
 state.char="good";
-playVoice("good");
+  
+// ★変更
+let a = new Audio("money.mp3");
+a.play();
 
 render();
 }
-
+// ==== お金が足りない時のメッセージ =====
 function failMoney(){
 state.msg1="お金が足りない";
 state.msg2="なんとかしてお金をGETしなければ！";
 state.char="fail";
 render();
 }
-function saveGame(){
-localStorage.setItem("saveData", JSON.stringify(state));
+
+// ==== トランジション設定 =====
+function fadeTransition(callback){
+
+let f = document.getElementById("fade");
+
+// ★暗転（1.5秒に統一）
+f.style.transition = "opacity 1.5s ease";
+f.style.opacity = 1;
+
+setTimeout(()=>{
+
+// ★ここでゲーム処理
+callback();
+
+// ★明るく戻す（超速）
+setTimeout(()=>{
+f.style.transition = "opacity 0.1s linear";
+f.style.opacity = 0;
+}, 50);
+
+}, 1500); // ← 必ず1.5秒と合わせる
 }
 
+// ==== セーブ =====
+function saveGame(){
+
+// ★保存前にSTを正規化
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+if(state.st > state.maxSt){
+state.st = state.maxSt;
+}
+
+localStorage.setItem("saveData", JSON.stringify(state));
+}
+  
+// ==== ロード =====
 function loadGame(){
 let data = localStorage.getItem("saveData");
 if(!data) return false;
 state = JSON.parse(data);
 return true;
 }
-
+  
+// ==== タイトル画面へ遷移 =====
 function saveAndExit(){
-tap();
 saveGame();
 
 state.msg1="セーブしました";

@@ -182,9 +182,19 @@ document.addEventListener('touchmove', function(e){
 e.preventDefault();
 }, { passive:false });
   
-let bgm = null;
+let bgm = new Audio();
 let currentBgm = "";
+const SE = {
+tap: new Audio("tap1.mp3"),
+money: new Audio("money.mp3"),
+sleep: new Audio("sleep.mp3"),
+save: new Audio("save.mp3")
+};
 
+// 全部事前読み込み
+for(let k in SE){
+SE[k].load();
+}
 // ====BGM====
 function getBgmByHouse(){
 
@@ -197,25 +207,23 @@ if(house === "豪邸") return "bgm3.mp3";
 
 return "bgm1.mp3";
 }
-  function playBGM(){
+
+function playBGM(){
 
 let next = getBgmByHouse();
 
-// 同じ曲なら何もしない
+// 同じなら何もしない
 if(currentBgm === next) return;
 
-// 既存停止
-if(bgm){
+// 切替
 bgm.pause();
-bgm.currentTime = 0;
-}
-
-// 新規再生
-bgm = new Audio(next);
+bgm.src = next;
 bgm.loop = true;
 bgm.volume = 0.5;
 
-// ★スマホ対策（ユーザー操作後に再生）
+// ★重要：loadしてから再生
+bgm.load();
+
 bgm.play().catch(()=>{});
 
 currentBgm = next;
@@ -244,7 +252,7 @@ return;
 }
 
 if(type==="fail"){
-playRandom(["fail1.mp3","fail2.mp3"]);
+playRandom(["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3",]);
 }
 }
 // ===== state =====
@@ -264,7 +272,7 @@ document.getElementById("msg").innerHTML="";
 function startNew(){
 tap();
 newGame();
-playBGM();
+playBGM(); // ←ここ
 }
 function getMorningMsg(){
 
@@ -463,7 +471,8 @@ tap();
 
 saveGame();
 
-new Audio("save.mp3").play();
+SE.save.currentTime = 0;
+SE.save.play();
 
 state.msg1="セーブしました！";
 state.msg2="いつでも続きから遊べます";
@@ -471,8 +480,10 @@ state.msg2="いつでも続きから遊べます";
 render();
 }
 // ===== 共通 =====
-function tap(){new Audio("tap1.mp3").play();}
-
+function tap(){
+SE.tap.currentTime = 0;
+SE.tap.play();
+}
 function useSt(n){
 if(state.st<n){
 state.msg1="スタミナが足りない！";
@@ -608,7 +619,8 @@ render();
 // ===== 就寝 =====
 function sleep(){
 tap();
-new Audio("sleep.mp3").play();
+SE.sleep.currentTime = 0;
+SE.sleep.play();
 
 fadeTransition(()=>{
 
@@ -743,7 +755,8 @@ state.char = "success";
 
 // ★1秒後に再生（sleep音と被らない）
 setTimeout(()=>{
-new Audio("money.mp3").play();
+SE.money.currentTime = 0;
+SE.money.play();
 }, 1000);
 
 playVoice("success");
@@ -762,7 +775,8 @@ state.msg1="化粧品を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-new Audio("money.mp3").play();
+SE.money.currentTime = 0;
+SE.money.play();
 
 render();
 }
@@ -778,7 +792,8 @@ state.msg1="エステ機器を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-new Audio("money.mp3").play();
+SE.money.currentTime = 0;
+SE.money.play();
 
 render();
 }
@@ -795,7 +810,8 @@ state.msg1="勝負服一式を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-new Audio("money.mp3").play();
+SE.money.currentTime = 0;
+SE.money.play();
 
 render();
 }
@@ -812,7 +828,8 @@ state.msg1="高級アクセサリーを購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-new Audio("money.mp3").play();
+SE.money.currentTime = 0;
+SE.money.play();
 
 render();
 }
@@ -830,7 +847,8 @@ state.msg2="魅力+10";
 state.char="good";
   
 // ★変更
-new Audio("money.mp3").play();
+SE.money.currentTime = 0;
+SE.money.play();
 
 render();
 }

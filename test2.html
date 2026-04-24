@@ -182,7 +182,45 @@ document.addEventListener('touchmove', function(e){
 e.preventDefault();
 }, { passive:false });
   
-// ===== 音 =====
+let bgm = null;
+let currentBgm = "";
+
+// ====BGM====
+function getBgmByHouse(){
+
+let house = getHouseName();
+
+if(house === "実家") return "bgm1.mp3";
+if(house === "マンション") return "bgm2.mp3";
+if(house === "タワマン") return "bgm3.mp3";
+if(house === "豪邸") return "bgm3.mp3";
+
+return "bgm1.mp3";
+}
+  function playBGM(){
+
+let next = getBgmByHouse();
+
+// 同じ曲なら何もしない
+if(currentBgm === next) return;
+
+// 既存停止
+if(bgm){
+bgm.pause();
+bgm.currentTime = 0;
+}
+
+// 新規再生
+bgm = new Audio(next);
+bgm.loop = true;
+bgm.volume = 0.5;
+
+// ★スマホ対策（ユーザー操作後に再生）
+bgm.play().catch(()=>{});
+
+currentBgm = next;
+}
+// ===== 効果音 =====
 function playRandom(arr){
 new Audio(arr[Math.floor(Math.random()*arr.length)]).play();
 }
@@ -223,9 +261,10 @@ document.getElementById("menu").innerHTML=`
 document.getElementById("status").innerHTML="";
 document.getElementById("msg").innerHTML="";
 }
-  function startNew(){
+function startNew(){
 tap();
 newGame();
+playBGM();
 }
 function getMorningMsg(){
 
@@ -237,10 +276,12 @@ let list = [
 
 return list[Math.floor(Math.random()*list.length)];
 }
+
 function continueGame(){
 tap();
 if(loadGame()){
 render();
+playBGM();
 }else{
 alert("セーブデータがありません");
 }
@@ -342,7 +383,8 @@ state.msg1 + "<br>" + state.msg2;
 
 // ===== ボタン描画 =====
 renderMenu();
-
+// ==== BGM ==== 
+playBGM();
 }
 
 function getBoyName(){

@@ -1031,22 +1031,25 @@ function fadeTransition(callback){
 
 let f = document.getElementById("fade");
 
-// ★暗転（1.5秒に統一）
+// 暗転
 f.style.transition = "opacity 1.5s ease";
 f.style.opacity = 1;
 
 setTimeout(()=>{
 
-// ★ここでゲーム処理
+try{
 callback();
+}catch(e){
+console.error("fade内エラー:", e);
+}
 
-// ★明るく戻す（超速）
+// ★必ず戻す（ここが最重要）
 setTimeout(()=>{
 f.style.transition = "opacity 0.1s linear";
 f.style.opacity = 0;
 }, 50);
 
-}, 1500); // ← 必ず1.5秒と合わせる
+}, 1500);
 }
 
 // ==== セーブ =====

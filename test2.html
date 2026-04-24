@@ -5,22 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;background:#000;color:#fff;font-family:sans-serif;}
-.scene{position:relative;height:100vh;}
-.bg{position:absolute;width:100%;height:100%;object-fit:cover;}
-.char{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:75%;}
+body{
+margin:0;
+background:#000;
+color:#fff;
+font-family:sans-serif;
+}
+
+.scene{
+position:relative;
+height:100vh;
+}
+
+/* ===== 背景 ===== */
+.bg{
+position:absolute;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:0;
+}
+
+/* ===== 彼氏 ===== */
 .bf{
 position:absolute;
 bottom:0;
-left:65%; /* 主人公の右後ろに配置 */
+left:65%;
 transform:translateX(-50%);
-height:40%; /* 主人公(75%)の約半分 */
-z-index:1; /* 主人公より後ろ */
+height:40%;
+z-index:1;
+pointer-events:none; /* ←クリックを通す */
 }
+
+/* ===== 主人公 ===== */
 .char{
-z-index:2; /* 主人公を前に出す */
+position:absolute;
+bottom:0;
+left:50%;
+transform:translateX(-50%);
+height:75%;
+z-index:2;
+pointer-events:none; /* ←これが一番重要 */
 }
-/* 左上 */
+
+/* ===== 左上 ===== */
 .status{
 position:absolute;
 top:10px;
@@ -29,9 +57,10 @@ background:rgba(0,0,0,0.6);
 padding:8px;
 border-radius:8px;
 font-size:12px;
+z-index:10;
 }
 
-/* 右上 */
+/* ===== 右上 ===== */
 .stbox{
 position:absolute;
 top:10px;
@@ -41,12 +70,22 @@ padding:6px;
 border-radius:8px;
 font-size:12px;
 width:140px;
+z-index:10;
 }
 
-.bar{height:8px;background:#333;border-radius:4px;margin-top:3px;}
-.bar-inner{height:100%;background:#0f0;}
+/* ===== スタミナバー ===== */
+.bar{
+height:8px;
+background:#333;
+border-radius:4px;
+margin-top:3px;
+}
+.bar-inner{
+height:100%;
+background:#0f0;
+}
 
-/* メッセージ */
+/* ===== メッセージ ===== */
 .msg{
 position:absolute;
 top:90px;
@@ -56,14 +95,16 @@ background:rgba(0,0,0,0.6);
 padding:8px;
 border-radius:8px;
 min-height:40px;
+z-index:10;
 }
 
-/* ボタン */
+/* ===== ボタン ===== */
 .menu{
 position:absolute;
 bottom:35px;
 left:10px;
 right:10px;
+z-index:20; /* ←最前面 */
 }
 
 .main-btn{
@@ -84,6 +125,11 @@ border-radius:12px;
 background:rgba(50,50,50,0.7);
 color:#fff;
 border:none;
+}
+
+/* 押せない状態 */
+button:disabled{
+opacity:0.4;
 }
 </style>
 </head>

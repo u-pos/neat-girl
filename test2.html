@@ -209,22 +209,6 @@ if(type==="fail"){
 playRandom(["fail1.mp3","fail2.mp3"]);
 }
 }
-
-if(type==="good"){
-playRandom(["good1.mp3","good2.mp3","good3.mp3"]);
-return;
-}
-
-if(type==="success"){
-playRandom(["success1.mp3","success2.mp3","success3.mp3","success4.mp3"]);
-return;
-}
-
-if(type==="fail"){
-playRandom(["fail1.mp3","fail2.mp3"]);
-}
-}
-
 // ===== state =====
 let state,mode="home";
 function showTitle(){
@@ -742,17 +726,6 @@ state.bagDay = 70;
 state.msg1="ブランドバッグを購入した！";
 state.msg2="魅力+10";
 state.char="good";
-  function fadeTransition(callback){
-
-let f = document.getElementById("fade");
-
-// フェードアウト
-f.style.opacity = 1;
-
-setTimeout(()=>{
-  callback();
-  f.style.opacity = 0;
-}, 200);
   
 // ★変更
 new Audio("money.mp3").play();
@@ -801,6 +774,19 @@ state.msg1="お金が足りない";
 state.msg2="なんとかしてお金をGETしなければ！";
 state.char="fail";
 render();
+}
+function fadeTransition(callback){
+
+let f = document.getElementById("fade");
+
+// フェードアウト
+f.style.opacity = 1;
+
+setTimeout(()=>{
+callback();
+f.style.opacity = 0;
+}, 200);
+
 }
 function saveGame(){
 localStorage.setItem("saveData", JSON.stringify(state));

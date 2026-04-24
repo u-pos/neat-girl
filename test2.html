@@ -190,16 +190,9 @@ let a = new Audio(f);
 a.preload = "auto";
 a.load();
 
-// ★これが重要（デコードさせる）
-a.muted = true;
-a.play().then(()=>{
-a.pause();
-a.currentTime = 0;
-a.muted = false;
-}).catch(()=>{});
-
 voiceCache[f] = a;
 });
+
 // ===== 画面スライド禁止 =====
 document.addEventListener('touchmove', function(e){
 e.preventDefault();
@@ -331,13 +324,7 @@ SE.tap.play();
 
 if(!window.audioUnlocked){
 
-// BGMここで開始
-bgm = new Audio(getBgmByHouse());
-bgm.loop = true;
-bgm.volume = 0.5;
-bgm.play().catch(()=>{});
-
-// SE全部解禁
+// ★ここで初めてデコードさせる
 for(let k in SE){
 let a = SE[k];
 a.muted = true;
@@ -348,7 +335,6 @@ a.muted = false;
 }).catch(()=>{});
 }
 
-// voice
 for(let f in voiceCache){
 let a = voiceCache[f];
 a.muted = true;
@@ -362,6 +348,7 @@ a.muted = false;
 window.audioUnlocked = true;
 }
 }
+  
 function getMorningMsg(){
 
 let list = [
@@ -916,11 +903,7 @@ f.style.opacity = 1;
 setTimeout(()=>{
 
 // ★ここでゲーム処理
-try{
 callback();
-}catch(e){
-console.error(e);
-}
 
 // ★明るく戻す（超速）
 setTimeout(()=>{
@@ -933,6 +916,17 @@ f.style.opacity = 0;
 
 // ==== セーブ =====
 function saveGame(){
+
+// ★保存前にSTを正規化
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+if(state.st > state.maxSt){
+state.st = state.maxSt;
+}
+
 localStorage.setItem("saveData", JSON.stringify(state));
 }
   

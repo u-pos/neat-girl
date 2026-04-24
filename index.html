@@ -685,7 +685,7 @@ if(!useSt(100)) return;
 
 let r = Math.random();
 
-if(r < 0.1){
+if(r < 0.05){
 state.msg1="失敗。。。1円ももらえなかった。";
 state.msg2="骨折り損だわ。。。";
 state.char="fail";
@@ -694,7 +694,7 @@ render();
 return;
 }
 
-if(r < 0.2){
+if(r < 0.05){
 state.msg1="最悪。待ち合わせすっぽかされた。";
 state.msg2="もう今日は何もやる気でない";
 state.char="fail";
@@ -702,7 +702,17 @@ playVoice("fail");
 render();
 return;
 }
+ 
+if(r < 0.05){
+state.msg1="相手とケンカしちゃった。";
+state.msg2="お小遣いももらえなかったし最悪～";
+state.char="fail";
+playVoice("fail");
+render();
+return;
+}
 
+  
 let base = 10000 + Math.random()*10000;
 let bonus = getCharm()*1000;
 

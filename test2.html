@@ -193,6 +193,7 @@ opacity:0.4;
 </div>
 
 <script>
+let isMuted = false;
 const ALL_VOICE = [
 "normal5.mp3",
 "good1.mp3","good2.mp3","good3.mp3",
@@ -1066,12 +1067,17 @@ localStorage.setItem("saveData", JSON.stringify(state));
   
 // ==== ロード =====
 function loadGame(){
+
+let data = localStorage.getItem("saveData");
+if(!data) return false;
+
+state = JSON.parse(data);
+
+// ★ここに移動
 if(state.pendingBoyfriend === undefined){
 state.pendingBoyfriend = null;
 }
-let data = localStorage.getItem("saveData");
-if(!data) return false;
-state = JSON.parse(data);
+
 return true;
 }
   

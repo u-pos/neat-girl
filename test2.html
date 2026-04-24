@@ -127,6 +127,20 @@ z-index:10;
 }
 
 /* ===== ボタン ===== */
+#muteBtn{
+position:absolute;
+right:10px;
+bottom:10px;
+width:50px;
+height:50px;
+border-radius:50%;
+border:none;
+background:rgba(0,0,0,0.6);
+color:#fff;
+font-size:18px;
+z-index:999;
+}
+  
 .menu{
 position:absolute;
 bottom:35px;
@@ -175,6 +189,7 @@ opacity:0.4;
 <div class="menu" id="menu"></div>
 <!-- ★これを追加 -->
 <div id="fade"></div>
+<button id="muteBtn" onclick="toggleMute()">🔊</button>
 </div>
 
 <script>
@@ -238,7 +253,22 @@ bgm.volume = 0.5;
 
 bgm.play().catch(()=>{});
 }
+function toggleMute(){
 
+isMuted = !isMuted;
+
+// BGM
+let bgm = document.getElementById("bgmPlayer");
+bgm.muted = isMuted;
+
+// SE
+for(let k in SE){
+SE[k].muted = isMuted;
+}
+
+// 表示切り替え
+document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
+}
 // ===== 効果音 =====
 function playRandom(arr){
 let file = arr[Math.floor(Math.random()*arr.length)];
@@ -678,61 +708,85 @@ render();
 // ===== 就寝 =====
 function sleep(){
 
-let a = SE.sleep.cloneNode();
-a.play();
+// ★就寝音
+let s = new Audio("sleep.mp3");
+s.play().catch(()=>{});
 
 fadeTransition(()=>{
 
-// ★先に上限を決める
+// ===== ST上限再計算 =====
 state.maxSt = 100;
 if(state.boyfriend === "normal"){
 state.maxSt += 20;
 }
 
-// ★その後に回復
+// ===== ST回復 =====
 state.st = Math.min(state.maxSt, state.st + 80);
 
-// 日付進行
+// ===== 日付進行 =====
 state.day++;
 
-// 減衰
+// ===== 減衰 =====
 decay();
 
-// 彼氏お小遣い
+// ===== 彼氏お小遣い =====
 boyfriendBonus();
-// ★彼氏出現
-if(state.boyfriend === "none"){
 
+
+// ===== 彼氏出現 =====
 let charm = getCharm();
 let r = Math.random();
 
-let type = null;
+let current = state.boyfriend;
+let candidate = null;
 
+// 出現候補
 if(charm >= 20 && charm < 40 && r < 0.1){
-type = "normal";
+candidate = "normal";
 }
-if(charm >= 40 && charm < 70 && r < 0.1){
-type = "rich";
+else if(charm >= 40 && charm < 70 && r < 0.1){
+candidate = "rich";
 }
-if(charm >= 70 && r < 0.1){
-type = "vip";
+else if(charm >= 70 && r < 0.1){
+candidate = "vip";
 }
 
-if(type){
-state.boyfriend = type;
-state.msg1 = "彼氏ができた！";
-state.msg2 = getBoyName();
+// 判定
+if(candidate){
+
+// 同ランクは無視
+if(candidate !== current){
+
+// 上位のみ乗り換え
+if(
+(current === "none") ||
+(current === "normal" && candidate !== "normal") ||
+(current === "rich" && candidate === "vip")
+){
+
+state.boyfriend = candidate;
+
+state.msg1 = `彼氏候補（${getBoyName()}）が現れた！`;
+state.msg2 = "付き合いますか？";
 state.char = "success";
+
+playVoice("success");
 }
 }
-// 朝メッセージ
+}
+
+
+// ===== 朝メッセージ =====
 if(state.msg1 === "" || state.char === "normal"){
+
 state.msg1 = getMorningMsg();
 state.msg2 = "";
 state.char = "normal";
+
 playVoice("normal");
 }
 
+// ===== 画面更新 =====
 render();
 
 });
@@ -800,44 +854,55 @@ playVoice("fail");
 // ===== 彼氏 =====
 function boyfriendBonus(){
 
-if(state.boyfriend === "none") return;
-
 let r = Math.random();
-let money = 0;
 
-// 通常彼氏
 if(state.boyfriend === "normal"){
-if(r < 0.1) money = 10000;
+
+if(r < 0.1){
+state.money += 10000;
+state.msg1 = "ラッキー♪彼氏が1万円くれた！";
+playVoice("good");
+}
 }
 
-// 小金持ち
-if(state.boyfriend === "rich"){
-if(r < 0.2) money = 10000;
-else if(r < 0.35) money = 20000;
-else if(r < 0.45) money = 30000;
+else if(state.boyfriend === "rich"){
+
+if(r < 0.2){
+state.money += 10000;
+state.msg1 = "ラッキー♪彼氏が1万円くれた！";
+}
+else if(r < 0.35){
+state.money += 20000;
+state.msg1 = "ラッキー♪彼氏が2万円くれた！";
+}
+else if(r < 0.45){
+state.money += 30000;
+state.msg1 = "ラッキー♪彼氏が3万円くれた！";
+}
+else{
+return;
 }
 
-// 大金持ち
-if(state.boyfriend === "vip"){
-if(r < 0.2) money = 100000;
-else if(r < 0.35) money = 200000;
-else if(r < 0.45) money = 300000;
+playVoice("good");
 }
 
-// お金もらえた場合
-if(money > 0){
-state.money += money;
+else if(state.boyfriend === "vip"){
 
-state.msg1 = "ラッキー♪";
-state.msg2 = `彼氏が${Math.floor(money/10000)}万円のおこづかいをくれた！`;
-
-state.char = "success";
-
-// ★1秒後に再生（sleep音と被らない）
-setTimeout(()=>{
-let a = new Audio("money.mp3");
-a.play();
-}, 1000);
+if(r < 0.2){
+state.money += 100000;
+state.msg1 = "ラッキー♪彼氏が10万円くれた！";
+}
+else if(r < 0.35){
+state.money += 200000;
+state.msg1 = "ラッキー♪彼氏が20万円くれた！";
+}
+else if(r < 0.45){
+state.money += 300000;
+state.msg1 = "ラッキー♪彼氏が30万円くれた！";
+}
+else{
+return;
+}
 
 playVoice("success");
 }

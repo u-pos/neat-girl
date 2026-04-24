@@ -249,9 +249,8 @@ fail:["fail1.mp3","fail2.mp3","fail3.mp3","fail4.mp3","fail5.mp3"]
 let arr = map[type];
 let file = arr[Math.floor(Math.random()*arr.length)];
 
-let base = voiceCache[file];
-let a = base.cloneNode();
-
+// ★毎回生成（iOS安定）
+let a = new Audio(file);
 a.currentTime = 0;
 a.play().catch(()=>{});
 }
@@ -274,22 +273,22 @@ document.getElementById("msg").innerHTML="";
   
 function startNew(){
 
-let a = new Audio(getBgmByHouse());
-a.loop = true;
-a.volume = 0.5;
+tapHome(); // ←必ず先
 
-// ★ここが重要
-a.play().then(()=>{
-bgm = a;
-}).catch(e=>{
+// ★既存停止
+if(bgm){
+bgm.pause();
+bgm.currentTime = 0;
+}
 
-// ★失敗したら強制再試行
-setTimeout(()=>{
-a.play().then(()=>{
-bgm = a;
-});
-}, 100);
+// ★1つだけ使い回す
+bgm = new Audio(getBgmByHouse());
+bgm.loop = true;
+bgm.volume = 0.5;
 
+// ★ここ重要
+bgm.play().catch(e=>{
+console.log("BGM失敗:", e);
 });
 
 newGame();
@@ -333,36 +332,35 @@ alert("セーブデータがありません");
 
 function tapHome(){
 
-// ★tap音
+// ★タップ音（ここはcloneでOK）
 let t = SE.tap.cloneNode();
 t.currentTime = 0;
 t.play().catch(()=>{});
 
-// ★初回だけ完全解禁
+// ★初回だけ全音デコード（←ここに入れるのが正解）
 if(!window.audioUnlocked){
 
-// ★ここで全音を強制デコード
-let unlockList = [];
+let list = [
+"money.mp3",
+"sleep.mp3",
+"save.mp3",
+"tap1.mp3",
+...ALL_VOICE
+];
 
-// SE
-for(let k in SE){
-let a = SE[k].cloneNode();
+// ★ここが重要
+list.forEach(f=>{
+let a = new Audio(f);
 a.muted = true;
-unlockList.push(a.play().catch(()=>{}));
-}
 
-// voice
-for(let f in voiceCache){
-let a = voiceCache[f].cloneNode();
-a.muted = true;
-unlockList.push(a.play().catch(()=>{}));
-}
-
-// ★全部終わったら
-Promise.all(unlockList).then(()=>{
-window.audioUnlocked = true;
+a.play().then(()=>{
+a.pause();
+a.currentTime = 0;
+a.muted = false;
+}).catch(()=>{});
 });
 
+window.audioUnlocked = true;
 }
 }
 function getMorningMsg(){
@@ -832,8 +830,7 @@ state.char = "success";
 
 // ★1秒後に再生（sleep音と被らない）
 setTimeout(()=>{
-let a = SE.money.cloneNode();
-a.currentTime = 0;
+let a = new Audio("money.mp3");
 a.play();
 }, 1000);
 
@@ -852,8 +849,7 @@ state.msg1="化粧品を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-let a = SE.money.cloneNode();
-a.currentTime = 0;
+let a = new Audio("money.mp3");
 a.play();
 
 render();
@@ -869,8 +865,7 @@ state.msg1="エステ機器を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-let a = SE.money.cloneNode();
-a.currentTime = 0;
+let a = new Audio("money.mp3");
 a.play();
 
 render();
@@ -887,8 +882,7 @@ state.msg1="勝負服一式を購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-let a = SE.money.cloneNode();
-a.currentTime = 0;
+let a = new Audio("money.mp3");
 a.play();
 
 render();
@@ -905,8 +899,7 @@ state.msg1="高級アクセサリーを購入した！";
 state.msg2="魅力+10";
 state.char="good";
 // ★変更
-let a = SE.money.cloneNode();
-a.currentTime = 0;
+let a = new Audio("money.mp3");
 a.play();
 
 render();
@@ -924,8 +917,7 @@ state.msg2="魅力+10";
 state.char="good";
   
 // ★変更
-let a = SE.money.cloneNode();
-a.currentTime = 0;
+let a = new Audio("money.mp3");
 a.play();
 
 render();

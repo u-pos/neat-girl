@@ -228,8 +228,13 @@ return "bgm1.mp3";
 // ===== 効果音 =====
 function playRandom(arr){
 let file = arr[Math.floor(Math.random()*arr.length)];
-voiceCache[file].currentTime = 0;
-voiceCache[file].play();
+let base = voiceCache[file];
+
+// ★毎回コピーを作る
+let a = base.cloneNode();
+
+a.currentTime = 0;
+a.play().catch(()=>{});
 }
 
 function playVoice(type){
@@ -273,11 +278,18 @@ function startNew(){
 
 tapHome();
 
+// ★既存止める
+if(bgm){
+bgm.pause();
+bgm.currentTime = 0;
+}
+
+// ★1回だけ生成
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 
-// ★遅延なし
+// ★ユーザー操作直後で再生
 bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
@@ -289,6 +301,11 @@ function continueGame(){
 
 tapHome();
 
+if(bgm){
+bgm.pause();
+bgm.currentTime = 0;
+}
+
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
@@ -298,20 +315,7 @@ console.log("BGMエラー:", e);
 });
 
 if(loadGame()){
-
-// ★まず上限決定
-state.maxSt = 100;
-if(state.boyfriend === "normal"){
-state.maxSt += 20;
-}
-
-// ★その後に補正
-if(state.st > state.maxSt){
-state.st = state.maxSt;
-}
-
 render();
-
 }else{
 alert("セーブデータがありません");
 }
@@ -319,12 +323,13 @@ alert("セーブデータがありません");
 
 function tapHome(){
 
-SE.tap.currentTime = 0;
-SE.tap.play();
+let a = SE.tap.cloneNode(); // ★コピー再生
+a.currentTime = 0;
+a.play().catch(()=>{});
 
+// 初回解禁
 if(!window.audioUnlocked){
 
-// ★ここで初めてデコードさせる
 for(let k in SE){
 let a = SE[k];
 a.muted = true;
@@ -455,8 +460,8 @@ let m=document.getElementById("menu");
 
 if(mode==="home"){
 m.innerHTML=`
-<button class="main-btn" onclick="tapHome();mode='action';render()">アクション</button>
-<button class="main-btn" onclick="tapHome();mode='shop';render()">買い物（所持品）</button>
+<button class="main-btn" onclick="tapHome(); setTimeout(()=>{mode='action';render()},0)">アクション</button>
+<button class="main-btn" onclick="tapHome(); setTimeout(()=>{mode='shop';render()},0)">買い物（所持品）</button>
 `;
 return;
 }
@@ -471,7 +476,7 @@ m.innerHTML=`
 <button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
 
 <div style="display:flex; gap:6px;">
-<button class="sub-btn" style="flex:7;" onclick="tapHome();mode='home';render()">戻る</button>
+<button class="sub-btn" onclick="tapHome(); setTimeout(()=>{mode='home';render()},0)">戻る</button>
 <button class="sub-btn" style="flex:3;" onclick="saveGameCustom()">セーブ</button>
 </div>
 `;

@@ -275,44 +275,84 @@ document.getElementById("menu").innerHTML=`
 document.getElementById("status").innerHTML="";
 document.getElementById("msg").innerHTML="";
 }
+  
 function startNew(){
 
-// ★ユーザー操作内で「生成＋再生」する
+tapHome(); // ★先にユーザー操作
+
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 
+setTimeout(()=>{
 bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
-
-tapHome(); // ←後述（ここも変更）
+}, 50);
 
 newGame();
 }
   
 function continueGame(){
 
+tapHome();
+
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 
+setTimeout(()=>{
 bgm.play().catch(e=>{
 console.log("BGMエラー:", e);
 });
-
-tapHome();
+}, 50);
 
 if(loadGame()){
+
+state.maxSt = 100;
+if(state.boyfriend === "normal"){
+state.maxSt += 20;
+}
+
+state.st = Math.min(state.st, state.maxSt);
+
 render();
+
 }else{
 alert("セーブデータがありません");
 }
 }
 
 function tapHome(){
+
 SE.tap.currentTime = 0;
 SE.tap.play();
+
+// ★初回だけ全音デコード
+if(!window.audioUnlocked){
+
+for(let k in SE){
+let a = SE[k];
+a.muted = true;
+a.play().then(()=>{
+a.pause();
+a.currentTime = 0;
+a.muted = false;
+}).catch(()=>{});
+}
+
+for(let f in voiceCache){
+let a = voiceCache[f];
+a.muted = true;
+a.play().then(()=>{
+a.pause();
+a.currentTime = 0;
+a.muted = false;
+}).catch(()=>{});
+}
+
+window.audioUnlocked = true;
+}
 }
 function getMorningMsg(){
 

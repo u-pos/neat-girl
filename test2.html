@@ -372,11 +372,8 @@ return Math.min(100,c);
 // ===== 表示 =====
 function render(){
 
-// ===== 主人公キャラ =====
 document.getElementById("char").src = "char_" + state.char + ".png";
 
-
-// ===== 彼氏表示 =====
 let bf = document.getElementById("bf");
 
 if(state.boyfriend === "none"){
@@ -384,27 +381,17 @@ bf.style.display = "none";
 }else{
 bf.style.display = "block";
 
-if(state.boyfriend === "normal"){
-bf.src = "kareshi1.png";
-}
-if(state.boyfriend === "rich"){
-bf.src = "kareshi2.png";
-}
-if(state.boyfriend === "vip"){
-bf.src = "kareshi3.png";
-}
+if(state.boyfriend === "normal") bf.src = "kareshi1.png";
+if(state.boyfriend === "rich") bf.src = "kareshi2.png";
+if(state.boyfriend === "vip") bf.src = "kareshi3.png";
 }
 
-
-// ===== 左上ステータス =====
 document.getElementById("status").innerHTML=`
 20歳${state.day}日目（${getHouseName()}）<br>
 所持金 ${Math.floor(state.money)}円<br>
 魅力:${getCharm()} 信用:${state.trust} フォロワー:${state.followers}
 `;
 
-
-// ===== 右上 =====
 document.getElementById("stbox").innerHTML=`
 ST ${state.st}/${state.maxSt}
 <div class="bar">
@@ -413,14 +400,11 @@ ST ${state.st}/${state.maxSt}
 彼氏:${getBoyName()} / 太客0人
 `;
 
-
-// ===== メッセージ =====
-document.getElementById("msg").innerHTML=
+document.getElementById("msg").innerHTML =
 state.msg1 + "<br>" + state.msg2;
 
-
-// ===== ボタン描画 =====
 renderMenu();
+}
 
 function getBoyName(){
 return{
@@ -430,7 +414,6 @@ rich:"小金持ち",
 vip:"大金持ち"
 }[state.boyfriend];
 }
-
 // ===== メニュー =====
 function renderMenu(){
 let m=document.getElementById("menu");

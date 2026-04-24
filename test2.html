@@ -329,16 +329,15 @@ function tapHome(){
 SE.tap.currentTime = 0;
 SE.tap.play();
 
-// ★ここが重要
 if(!window.audioUnlocked){
 
-// BGMもここで解禁
+// BGMここで開始
 bgm = new Audio(getBgmByHouse());
 bgm.loop = true;
 bgm.volume = 0.5;
 bgm.play().catch(()=>{});
 
-// SE
+// SE全部解禁
 for(let k in SE){
 let a = SE[k];
 a.muted = true;
@@ -694,9 +693,6 @@ decay();
 
 // 彼氏お小遣い
 boyfriendBonus();
-
-// 彼氏イベント
-boyfriendEvent();
 
 // 朝メッセージ
 if(state.msg1 === "" || state.char === "normal"){

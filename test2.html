@@ -229,8 +229,18 @@ bgm.play().catch(()=>{});
 currentBgm = next;
 }
 // ===== 効果音 =====
+const voiceCache = {};
+
 function playRandom(arr){
-new Audio(arr[Math.floor(Math.random()*arr.length)]).play();
+let file = arr[Math.floor(Math.random()*arr.length)];
+
+if(!voiceCache[file]){
+voiceCache[file] = new Audio(file);
+voiceCache[file].load();
+}
+
+voiceCache[file].currentTime = 0;
+voiceCache[file].play();
 }
 function play(name){ new Audio(name).play(); }
 
@@ -271,8 +281,16 @@ document.getElementById("msg").innerHTML="";
 }
 function startNew(){
 tap();
+
+// ★先にBGMセット（ここ重要）
+bgm.src = getBgmByHouse();
+bgm.loop = true;
+bgm.volume = 0.5;
+bgm.play().catch(()=>{});
+
+currentBgm = bgm.src;
+
 newGame();
-playBGM(); // ←ここ
 }
 function getMorningMsg(){
 
@@ -287,9 +305,18 @@ return list[Math.floor(Math.random()*list.length)];
 
 function continueGame(){
 tap();
+
 if(loadGame()){
+
+bgm.src = getBgmByHouse();
+bgm.loop = true;
+bgm.volume = 0.5;
+bgm.play().catch(()=>{});
+
+currentBgm = bgm.src;
+
 render();
-playBGM();
+
 }else{
 alert("セーブデータがありません");
 }
@@ -852,43 +879,6 @@ SE.money.play();
 
 render();
 }
-function boyfriendBonus(){
-
-if(state.boyfriend === "none") return;
-
-let r = Math.random();
-let money = 0;
-
-// 通常彼氏
-if(state.boyfriend === "normal"){
-if(r < 0.1) money = 10000;
-}
-
-// 小金持ち
-if(state.boyfriend === "rich"){
-if(r < 0.2) money = 10000;
-else if(r < 0.35) money = 20000;
-else if(r < 0.45) money = 30000;
-}
-
-// 大金持ち
-if(state.boyfriend === "vip"){
-if(r < 0.2) money = 100000;
-else if(r < 0.35) money = 200000;
-else if(r < 0.45) money = 300000;
-}
-
-// お金もらえた場合
-if(money > 0){
-state.money += money;
-
-state.msg1 = "ラッキー♪";
-state.msg2 = `彼氏が${Math.floor(money/10000)}万円のおこづかいをくれた！`;
-
-state.char = "success";
-playVoice("success");
-}
-}
 // ==== お金が足りない時のメッセージ =====
 function failMoney(){
 state.msg1="お金が足りない";
@@ -902,25 +892,26 @@ function fadeTransition(callback){
 
 let f = document.getElementById("fade");
 
-// 暗転（2秒）
-f.style.transition = "opacity 2s ease";
+// ★暗転（1.5秒に統一）
+f.style.transition = "opacity 1.5s ease";
 f.style.opacity = 1;
 
 setTimeout(()=>{
 
+// ★ここでゲーム処理
 try{
 callback();
 }catch(e){
 console.error(e);
 }
 
-// ★ここが重要（必ず戻す）
+// ★明るく戻す（超速）
 setTimeout(()=>{
 f.style.transition = "opacity 0.1s linear";
 f.style.opacity = 0;
 }, 50);
 
-}, 1500);
+}, 1500); // ← 必ず1.5秒と合わせる
 }
 
 // ==== セーブ =====

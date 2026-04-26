@@ -527,12 +527,12 @@ return;
 // ===== action（ここが今回の本体）=====
 if(mode==="action"){
 m.innerHTML=`
-<button class="sub-btn" onclick="doSNS()">SNSを投稿する</button>
-<button class="sub-btn" onclick="doGym()">ジムへ行く</button>
-<button class="sub-btn" onclick="doEsthe()">エステに行く</button>
-<button class="sub-btn" onclick="doStream()">Youtube配信</button>
-<button class="sub-btn" onclick="doPapa()">パパ活</button>
-<button class="sub-btn" onclick="sleep()">寝る</button>
+<button class="sub-btn" onclick="doSNS()">SNSを投稿する（ST10消費）</button>
+<button class="sub-btn" onclick="doGym()">ジムへ行く（ST20消費:3000円）</button>
+<button class="sub-btn" onclick="doEsthe()">エステに行く（ST30消費:5000円）</button>
+<button class="sub-btn" onclick="doStream()">Youtubeで配信（ST50消費）</button>
+<button class="sub-btn" onclick="doPapa()">パパ活（ST100消費）</button>
+<button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
 
 <div style="display:flex; gap:6px;">
 <button class="sub-btn" style="flex:7;" onclick="handleBack()">戻る</button>
@@ -808,11 +808,13 @@ playVoice("success");
 // ★ここでreturnしてもいい（安全）
 }
 }
-// 朝メッセージ
-if(state.msg1 === "" || state.char === "normal"){
+// ===== 朝メッセージ =====
+if(!state.pendingBoyfriend){
+
 state.msg1 = getMorningMsg();
 state.msg2 = "";
 state.char = "normal";
+
 playVoice("normal");
 }
 

@@ -181,18 +181,15 @@ opacity:0.4;
 
 window.acceptBoyfriend = function(){
 
-// 彼氏確定
-state.boyfriend = state.pendingBoyfriend;
+if(!state.pendingBoyfriend) return;
 
-// ★ここが重要：完全クリア
+state.boyfriend = state.pendingBoyfriend;
 state.pendingBoyfriend = null;
 
-// UI強制リセット（重要）
 mode = "home";
 
-// メッセージ
 state.msg1 = "彼氏ができた！";
-state.msg2 = "";
+state.msg2 = "やったね！";
 state.char = "success";
 
 playVoice("success");
@@ -202,15 +199,12 @@ render();
 
 window.rejectBoyfriend = function(){
 
-// ★完全クリア
 state.pendingBoyfriend = null;
 
-// UIリセット
 mode = "home";
 
-// メッセージ
-state.msg1 = "今回は見送った。";
-state.msg2 = "";
+state.msg1 = "今の生活に満足してるし、";
+state.msg2 = "彼氏いらないもーん。";
 state.char = "normal";
 
 render();
@@ -795,6 +789,7 @@ decay();
 // 彼氏お小遣い
 boyfriendBonus();
 // ★彼氏出現
+// ★彼氏出現（YES/NO用）
 if(state.boyfriend === "none"){
 
 let charm = getCharm();
@@ -813,10 +808,15 @@ type = "vip";
 }
 
 if(type){
-state.boyfriend = type;
-state.msg1 = "彼氏ができた！";
+state.pendingBoyfriend = type;
+
+state.msg1 = "彼氏候補が現れた！";
 state.msg2 = getBoyName();
 state.char = "success";
+
+playVoice("success");
+
+// ★ここでreturnしてもいい（安全）
 }
 }
 // 朝メッセージ

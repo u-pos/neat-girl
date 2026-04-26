@@ -178,6 +178,36 @@ opacity:0.4;
 </div>
 
 <script>
+window.acceptBoyfriend = function(){
+
+if(!state.pendingBoyfriend) return;
+
+state.boyfriend = state.pendingBoyfriend;
+state.pendingBoyfriend = null;
+
+state.msg1 = "彼氏ができた！";
+state.msg2 = "";
+state.char = "success";
+
+playVoice("success");
+
+render();
+}
+window.acceptBoyfriend = function(){
+
+if(!state.pendingBoyfriend) return;
+
+state.boyfriend = state.pendingBoyfriend;
+state.pendingBoyfriend = null;
+
+state.msg1 = "彼氏ができた！";
+state.msg2 = "";
+state.char = "success";
+
+playVoice("success");
+
+render();
+}
 const ALL_VOICE = [
 "normal5.mp3",
 "good1.mp3","good2.mp3","good3.mp3",

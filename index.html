@@ -178,13 +178,19 @@ opacity:0.4;
 </div>
 
 <script>
+
 window.acceptBoyfriend = function(){
 
-if(!state.pendingBoyfriend) return;
-
+// 彼氏確定
 state.boyfriend = state.pendingBoyfriend;
+
+// ★ここが重要：完全クリア
 state.pendingBoyfriend = null;
 
+// UI強制リセット（重要）
+mode = "home";
+
+// メッセージ
 state.msg1 = "彼氏ができた！";
 state.msg2 = "";
 state.char = "success";
@@ -193,21 +199,23 @@ playVoice("success");
 
 render();
 }
-window.acceptBoyfriend = function(){
 
-if(!state.pendingBoyfriend) return;
+window.rejectBoyfriend = function(){
 
-state.boyfriend = state.pendingBoyfriend;
+// ★完全クリア
 state.pendingBoyfriend = null;
 
-state.msg1 = "彼氏ができた！";
-state.msg2 = "";
-state.char = "success";
+// UIリセット
+mode = "home";
 
-playVoice("success");
+// メッセージ
+state.msg1 = "今回は見送った。";
+state.msg2 = "";
+state.char = "normal";
 
 render();
 }
+  
 const ALL_VOICE = [
 "normal5.mp3",
 "good1.mp3","good2.mp3","good3.mp3",

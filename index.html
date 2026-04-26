@@ -755,30 +755,126 @@ render();
 // ===== 就寝 =====
 function sleep(){
 
-let a = SE.sleep.cloneNode();
+// ★就寝音
+if(!isMuted){
+let a = new Audio("sleep.mp3");
 a.play();
+}
 
 fadeTransition(()=>{
 
-// ★先に上限を決める
+// ===== ST上限 =====
 state.maxSt = 100;
 if(state.boyfriend === "normal"){
 state.maxSt += 20;
 }
 
-// ★その後に回復
+// ===== ST回復 =====
 state.st = Math.min(state.maxSt, state.st + 80);
 
-// 日付進行
+// ===== 日付 =====
 state.day++;
 
-// 減衰
-decay();
+// ===== 1日リセット =====
+state.snsUsed = false;
+state.streamUsed = false;
+state.gymUsed = false;
 
-// 彼氏お小遣い
-boyfriendBonus();
-// ★彼氏出現
-// ★彼氏出現（YES/NO用）
+// ===== クールダウン =====
+if(state.estheCooldown > 0) state.estheCooldown--;
+if(state.beautyCooldown > 0) state.beautyCooldown--;
+
+// ===== 美容室減衰 =====
+state.beautyMiss++;
+if(state.beautyMiss >= 15 && state.beauty > 0){
+state.beauty--;
+}
+
+// ===== メッセージ管理 =====
+let msg1 = "";
+let msg2 = "";
+let char = "normal";
+
+let gotMoney = false;
+
+// ===== ① 彼氏お金（最優先）=====
+if(state.boyfriend !== "none"){
+
+let r = Math.random();
+
+if(state.boyfriend === "normal" && r < 0.1){
+state.money += 10000;
+msg1 = "彼氏が1万円くれた！";
+char = "success";
+gotMoney = true;
+}
+
+else if(state.boyfriend === "rich"){
+if(r < 0.2){
+state.money += 10000;
+msg1 = "彼氏が1万円くれた！";
+gotMoney = true;
+}
+else if(r < 0.35){
+state.money += 20000;
+msg1 = "彼氏が2万円くれた！";
+gotMoney = true;
+}
+else if(r < 0.45){
+state.money += 30000;
+msg1 = "彼氏が3万円くれた！";
+gotMoney = true;
+}
+if(gotMoney) char = "success";
+}
+
+else if(state.boyfriend === "vip"){
+if(r < 0.2){
+state.money += 100000;
+msg1 = "彼氏が10万円くれた！";
+gotMoney = true;
+}
+else if(r < 0.35){
+state.money += 200000;
+msg1 = "彼氏が20万円くれた！";
+gotMoney = true;
+}
+else if(r < 0.45){
+state.money += 300000;
+msg1 = "彼氏が30万円くれた！";
+gotMoney = true;
+}
+if(gotMoney) char = "success";
+}
+
+if(gotMoney){
+playVoice("success");
+}
+}
+
+// ===== ② アイテム消耗 =====
+if(!gotMoney){
+
+let decayMsg = decay();
+
+if(decayMsg){
+msg1 = decayMsg;
+char = "fail";
+playVoice("fail");
+}
+}
+
+// ===== ③ 朝メッセージ =====
+if(!gotMoney && msg1 === ""){
+
+msg1 = getMorningMsg();
+msg2 = "";
+char = "normal";
+
+playVoice("normal");
+}
+
+// ===== 彼氏出現（YES/NO）=====
 if(state.boyfriend === "none"){
 
 let charm = getCharm();
@@ -805,25 +901,25 @@ state.char = "success";
 
 playVoice("success");
 
-// ★ここでreturnしてもいい（安全）
+render();
+return;
 }
 }
-// ===== 朝メッセージ =====
-if(!state.pendingBoyfriend){
 
-state.msg1 = getMorningMsg();
-state.msg2 = "";
-state.char = "normal";
-
-playVoice("normal");
-}
+// ===== 最終反映 =====
+state.msg1 = msg1;
+state.msg2 = msg2;
+state.char = char;
 
 render();
 
 });
 }
+  
 // ===== 劣化 =====
 function decay(){
+
+let messages = [];
 
 // 化粧品
 if(state.cosmeDay>0 && --state.cosmeDay===0){

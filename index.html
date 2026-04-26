@@ -506,7 +506,7 @@ function renderMenu(){
 
 let m = document.getElementById("menu");
 
-// YES/NO
+// ===== 彼氏イベント =====
 if(state.pendingBoyfriend){
 m.innerHTML=`
 <button class="main-btn" onclick="acceptBoyfriend()">はい</button>
@@ -515,7 +515,7 @@ m.innerHTML=`
 return;
 }
 
-// ★これを追加
+// ===== home =====
 if(mode==="home"){
 m.innerHTML=`
 <button class="main-btn" onclick="tapHome(); mode='action'; render()">アクション</button>
@@ -524,48 +524,40 @@ m.innerHTML=`
 return;
 }
 
-// アクション
+// ===== action（ここが今回の本体）=====
 if(mode==="action"){
 m.innerHTML=`
 <button class="sub-btn" onclick="doSNS()">SNSを投稿する</button>
-...
+<button class="sub-btn" onclick="doGym()">ジムへ行く</button>
+<button class="sub-btn" onclick="doEsthe()">エステに行く</button>
+<button class="sub-btn" onclick="doStream()">Youtube配信</button>
+<button class="sub-btn" onclick="doPapa()">パパ活</button>
+<button class="sub-btn" onclick="sleep()">寝る</button>
+
+<div style="display:flex; gap:6px;">
+<button class="sub-btn" style="flex:7;" onclick="handleBack()">戻る</button>
+<button class="sub-btn" style="flex:3;" onclick="handleSaveButton()">
+${state.saveReady ? "タイトルへ" : "セーブ"}
+</button>
+</div>
 `;
 return;
 }
 
+// ===== shop =====
 if(mode==="shop"){
 m.innerHTML=`
+<button onclick="buyCosme()">化粧品</button>
+<button onclick="buyEsthe()">エステ</button>
+<button onclick="buyCloth()">服</button>
+<button onclick="buyAcc()">アクセ</button>
+<button onclick="buyBag()">バッグ</button>
 
-<button class="sub-btn" ${state.cosmeDay>0?'disabled':''}
-onclick="buyCosme()">
-化粧品（${state.cosmeDay>0?`残り${state.cosmeDay}日`:'1万円'}）
-</button>
-
-<button class="sub-btn" ${state.estheDay>0?'disabled':''}
-onclick="buyEsthe()">
-エステ機器（${state.estheDay>0?`残り${state.estheDay}日`:'5万円'}）
-</button>
-
-<button class="sub-btn" ${state.clothDay>0?'disabled':''}
-onclick="buyCloth()">
-勝負服一式（${state.clothDay>0?`残り${state.clothDay}日`:'10万円'}）
-</button>
-
-<button class="sub-btn" ${state.accDay>0?'disabled':''}
-onclick="buyAcc()">
-高級ジュエリー（${state.accDay>0?`残り${state.accDay}日`:'20万円'}）
-</button>
-
-<button class="sub-btn" ${state.bagDay>0?'disabled':''}
-onclick="buyBag()">
-ブランドバッグ（${state.bagDay>0?`残り${state.bagDay}日`:'30万円'}）
-</button>
-
-<button class="sub-btn" onclick="tapHome();mode='home';render()">戻る</button>
+<button onclick="tapHome(); mode='home'; render()">戻る</button>
 `;
+return;
 }
 }
-  
 //====戻るボタン専用関数====
 function handleBack(){
 

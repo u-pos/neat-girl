@@ -506,36 +506,33 @@ function renderMenu(){
 
 let m = document.getElementById("menu");
 
+// YES/NO
 if(state.pendingBoyfriend){
-
 m.innerHTML=`
 <button class="main-btn" onclick="acceptBoyfriend()">はい</button>
 <button class="main-btn" onclick="rejectBoyfriend()">いいえ</button>
 `;
-
 return;
 }
 
-if(mode==="action"){
+// ★これを追加
+if(mode==="home"){
 m.innerHTML=`
-<button class="sub-btn" onclick="doSNS()">SNSを投稿する（ST10消費）</button>
-<button class="sub-btn" onclick="doGym()">ジムへ行く（ST20消費$3000円支払い）</button>
-<button class="sub-btn" onclick="doEsthe()">エステに行く（ST30消費&5000円支払い）</button>
-<button class="sub-btn" onclick="doStream()">Youtubeで配信をする（ST50消費）</button>
-<button class="sub-btn" onclick="doPapa()">パパ活に出かける（ST100消費）</button>
-<button class="sub-btn" onclick="sleep()">今日はもう寝る（ST80回復）</button>
-
-<div style="display:flex; gap:6px;">
-<button class="sub-btn" style="flex:7;" onclick="handleBack()">戻る</button>
-
-<button class="sub-btn" style="flex:3;" onclick="handleSaveButton()">
-${state.saveReady ? "タイトルへ" : "セーブ"}
-</button>
-</div>
+<button class="main-btn" onclick="tapHome(); mode='action'; render()">アクション</button>
+<button class="main-btn" onclick="tapHome(); mode='shop'; render()">買い物</button>
 `;
 return;
 }
-  
+
+// アクション
+if(mode==="action"){
+m.innerHTML=`
+<button class="sub-btn" onclick="doSNS()">SNSを投稿する</button>
+...
+`;
+return;
+}
+
 if(mode==="shop"){
 m.innerHTML=`
 

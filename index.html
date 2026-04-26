@@ -471,13 +471,16 @@ vip:"大金持ち"
 }
 // ===== メニュー =====
 function renderMenu(){
-let m=document.getElementById("menu");
 
-if(mode==="home"){
+let m = document.getElementById("menu");
+
+if(state.pendingBoyfriend){
+
 m.innerHTML=`
-<button class="main-btn" onclick="tapHome(); setTimeout(()=>{mode='action';render()},0)">アクション</button>
-<button class="main-btn" onclick="tapHome(); setTimeout(()=>{mode='shop';render()},0)">買い物（所持品）</button>
+<button class="main-btn" onclick="acceptBoyfriend()">はい</button>
+<button class="main-btn" onclick="rejectBoyfriend()">いいえ</button>
 `;
+
 return;
 }
 
